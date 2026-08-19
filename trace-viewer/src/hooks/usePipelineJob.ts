@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { ApiError, fetchJob, fetchJobTrace, submitJob } from "../lib/api";
 import { toPayload, type DesignRequestDraft } from "../lib/validateDesignRequest";
 import type { JobState } from "../types/job";
@@ -14,9 +14,7 @@ export function usePipelineJob(
   const [submitting, setSubmitting] = useState(false);
   const openedRef = useRef(false);
   const jobIdRef = useRef<string | null>(null);
-  const onTraceRef = useRef(onTrace);
-  onTraceRef.current = onTrace;
-  jobIdRef.current = jobId;
+  const onJobTrace = useEffectEvent(onTrace);
 
   useEffect(() => {
     if (!jobId) return undefined;
@@ -42,7 +40,7 @@ export function usePipelineJob(
           openedRef.current = true;
           const raw = await fetchJobTrace(jobId);
           if (cancelled) return;
-          onTraceRef.current(raw, next.request_id, jobId);
+          onJobTrace(raw, next.request_id, jobId);
         }
         if (next.status === "failed") {
           setError(next.error || "The job failed.");
@@ -70,6 +68,7 @@ export function usePipelineJob(
     try {
       const accepted = await submitJob(toPayload(draft), draft.no_model);
       openedRef.current = false;
+      jobIdRef.current = accepted.job_id;
       setJobId(accepted.job_id);
       setJob({
         job_id: accepted.job_id,
@@ -96,6 +95,7 @@ export function usePipelineJob(
   function attach(nextId: string) {
     if (jobIdRef.current === nextId) return;
     openedRef.current = false;
+    jobIdRef.current = nextId;
     setError(null);
     setJobId(nextId);
     setJob({
@@ -114,6 +114,7 @@ export function usePipelineJob(
 
   function reset() {
     openedRef.current = false;
+    jobIdRef.current = null;
     setJobId(null);
     setJob(null);
     setError(null);

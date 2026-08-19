@@ -2590,6 +2590,87 @@ wheels = [
 ]
 
 [[package]]
+name = "peptaris-route-agent"
+version = "0.2.0"
+source = { editable = "." }
+dependencies = [
+    { name = "click" },
+    { name = "deepagents" },
+    { name = "fastapi" },
+    { name = "jsonschema" },
+    { name = "keyring" },
+    { name = "langchain-openai" },
+    { name = "langfuse" },
+    { name = "langgraph" },
+    { name = "litellm" },
+    { name = "loguru" },
+    { name = "networkx" },
+    { name = "openpyxl" },
+    { name = "platformdirs" },
+    { name = "pydantic" },
+    { name = "pydantic-settings" },
+    { name = "pymupdf" },
+    { name = "pymupdf4llm" },
+    { name = "rdkit" },
+    { name = "rich" },
+    { name = "uvicorn", extra = ["standard"] },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "build" },
+    { name = "httpx" },
+    { name = "ipykernel" },
+    { name = "mypy" },
+    { name = "nbconvert" },
+    { name = "pytest" },
+    { name = "pytest-cov" },
+    { name = "pytest-mock" },
+    { name = "ruff" },
+    { name = "twine" },
+    { name = "types-networkx" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "click", specifier = ">=8.1" },
+    { name = "deepagents", specifier = ">=0.7.6" },
+    { name = "fastapi", specifier = ">=0.115" },
+    { name = "jsonschema", specifier = ">=4.23" },
+    { name = "keyring", specifier = ">=25.0" },
+    { name = "langchain-openai", specifier = ">=1.5.1" },
+    { name = "langfuse", specifier = ">=4.14" },
+    { name = "langgraph", specifier = ">=0.3" },
+    { name = "litellm", specifier = ">=1.60" },
+    { name = "loguru", specifier = ">=0.7" },
+    { name = "networkx", specifier = ">=3.6.1" },
+    { name = "openpyxl", specifier = ">=3.1" },
+    { name = "platformdirs", specifier = ">=4.3" },
+    { name = "pydantic", specifier = ">=2.10" },
+    { name = "pydantic-settings", specifier = ">=2.7" },
+    { name = "pymupdf", specifier = ">=1.25" },
+    { name = "pymupdf4llm", specifier = ">=0.0.17" },
+    { name = "rdkit", specifier = ">=2026.3.5" },
+    { name = "rich", specifier = ">=13.9" },
+    { name = "uvicorn", extras = ["standard"], specifier = ">=0.34" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "build", specifier = ">=1.2" },
+    { name = "httpx", specifier = ">=0.28" },
+    { name = "ipykernel", specifier = ">=7.3.0" },
+    { name = "mypy", specifier = ">=1.14" },
+    { name = "nbconvert", specifier = ">=7.17.1" },
+    { name = "pytest", specifier = ">=8.3" },
+    { name = "pytest-cov", specifier = ">=6.0" },
+    { name = "pytest-mock", specifier = ">=3.14" },
+    { name = "ruff", specifier = ">=0.9" },
+    { name = "twine", specifier = ">=6.0" },
+    { name = "types-networkx", specifier = ">=3.6.1.20260728" },
+]
+
+[[package]]
 name = "pexpect"
 version = "4.9.0"
 source = { registry = "https://pypi.org/simple" }
@@ -3408,87 +3489,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/c0/8f/0722ca900cc807c13a6a0c696dacf35430f72e0ec571c4275d2371fca3e9/rich-15.0.0.tar.gz", hash = "sha256:edd07a4824c6b40189fb7ac9bc4c52536e9780fbbfbddf6f1e2502c31b068c36", size = 230680, upload-time = "2026-04-12T08:24:00.75Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/82/3b/64d4899d73f91ba49a8c18a8ff3f0ea8f1c1d75481760df8c68ef5235bf5/rich-15.0.0-py3-none-any.whl", hash = "sha256:33bd4ef74232fb73fe9279a257718407f169c09b78a87ad3d296f548e27de0bb", size = 310654, upload-time = "2026-04-12T08:24:02.83Z" },
-]
-
-[[package]]
-name = "peptaris-route-agent"
-version = "0.1.0"
-source = { editable = "." }
-dependencies = [
-    { name = "click" },
-    { name = "deepagents" },
-    { name = "fastapi" },
-    { name = "jsonschema" },
-    { name = "keyring" },
-    { name = "langchain-openai" },
-    { name = "langfuse" },
-    { name = "langgraph" },
-    { name = "litellm" },
-    { name = "loguru" },
-    { name = "networkx" },
-    { name = "openpyxl" },
-    { name = "platformdirs" },
-    { name = "pydantic" },
-    { name = "pydantic-settings" },
-    { name = "pymupdf" },
-    { name = "pymupdf4llm" },
-    { name = "rdkit" },
-    { name = "rich" },
-    { name = "uvicorn", extra = ["standard"] },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "build" },
-    { name = "httpx" },
-    { name = "ipykernel" },
-    { name = "mypy" },
-    { name = "nbconvert" },
-    { name = "pytest" },
-    { name = "pytest-cov" },
-    { name = "pytest-mock" },
-    { name = "ruff" },
-    { name = "twine" },
-    { name = "types-networkx" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "click", specifier = ">=8.1" },
-    { name = "deepagents", specifier = ">=0.7.6" },
-    { name = "fastapi", specifier = ">=0.115" },
-    { name = "jsonschema", specifier = ">=4.23" },
-    { name = "keyring", specifier = ">=25.0" },
-    { name = "langchain-openai", specifier = ">=1.5.1" },
-    { name = "langfuse", specifier = ">=4.14" },
-    { name = "langgraph", specifier = ">=0.3" },
-    { name = "litellm", specifier = ">=1.60" },
-    { name = "loguru", specifier = ">=0.7" },
-    { name = "networkx", specifier = ">=3.6.1" },
-    { name = "openpyxl", specifier = ">=3.1" },
-    { name = "platformdirs", specifier = ">=4.3" },
-    { name = "pydantic", specifier = ">=2.10" },
-    { name = "pydantic-settings", specifier = ">=2.7" },
-    { name = "pymupdf", specifier = ">=1.25" },
-    { name = "pymupdf4llm", specifier = ">=0.0.17" },
-    { name = "rdkit", specifier = ">=2026.3.5" },
-    { name = "rich", specifier = ">=13.9" },
-    { name = "uvicorn", extras = ["standard"], specifier = ">=0.34" },
-]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "build", specifier = ">=1.2" },
-    { name = "httpx", specifier = ">=0.28" },
-    { name = "ipykernel", specifier = ">=7.3.0" },
-    { name = "mypy", specifier = ">=1.14" },
-    { name = "nbconvert", specifier = ">=7.17.1" },
-    { name = "pytest", specifier = ">=8.3" },
-    { name = "pytest-cov", specifier = ">=6.0" },
-    { name = "pytest-mock", specifier = ">=3.14" },
-    { name = "ruff", specifier = ">=0.9" },
-    { name = "twine", specifier = ">=6.0" },
-    { name = "types-networkx", specifier = ">=3.6.1.20260728" },
 ]
 
 [[package]]

@@ -378,6 +378,7 @@ class TestDeepAgent(ValidationCase):
             model="openai/gpt-5.6-terra",
             system_prompt=SYSTEM_PROMPT,
             journal_allowlist=("pubs.acs.org",),
+            api_key="sk-test",
         )
 
         model = captured["model"]

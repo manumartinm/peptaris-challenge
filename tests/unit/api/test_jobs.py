@@ -11,6 +11,7 @@ from route_agent.models.verdict import RouteVerdict
 from route_agent.observability import current_context
 from route_agent.pipeline import RunResult
 from route_agent_api.app import create_app
+from route_agent_api.deps import get_settings, health_payload
 from route_agent_api.jobs import JobStore
 from tests.support.conflict_fixtures import (
     empty_validation,
@@ -126,3 +127,12 @@ class TestJobsApi(ValidationCase):
         client = _client(store)
         missing = client.get("/api/jobs/unknown/trace")
         assert missing.status_code == 404
+
+
+class TestAppFactory:
+    def test_create_app_binds_store_for_health_payload(self) -> None:
+        app = create_app()
+        store = app.state.job_store
+        assert isinstance(store, JobStore)
+        payload = health_payload(store, get_settings())
+        assert "checks" in payload

@@ -45,8 +45,6 @@ export default function App() {
   const [openingJobId, setOpeningJobId] = useState<string | null>(null);
   const loadedJobIdRef = useRef<string | null>(null);
 
-  loadedJobIdRef.current = loaded?.jobId ?? null;
-
   const applyTrace = useCallback((raw: unknown, requestId: string, jobId: string | null) => {
     const result = parseTraceText(JSON.stringify(raw));
     if (!result.ok) {
@@ -87,9 +85,13 @@ export default function App() {
         : "home";
   const activeTab = route.kind === "job" || route.kind === "request" ? route.tab : tab;
   const pipelineRef = useRef(pipeline);
-  pipelineRef.current = pipeline;
   const goRef = useRef(go);
-  goRef.current = go;
+
+  useEffect(() => {
+    loadedJobIdRef.current = loaded?.jobId ?? null;
+    pipelineRef.current = pipeline;
+    goRef.current = go;
+  });
 
   useEffect(() => {
     if (routeKey === "home") {

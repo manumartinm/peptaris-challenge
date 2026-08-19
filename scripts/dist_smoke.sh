@@ -62,13 +62,16 @@ venv_python="$PIPX_HOME/venvs/peptaris-route-agent/bin/python"
 "$venv_python" - <<'PY'
 from route_agent.version import package_version
 from route_agent_api.app import create_app
-from route_agent_api.deps import get_settings, get_store, health_payload
+from route_agent_api.deps import get_settings, health_payload
+from route_agent_api.jobs import JobStore
 
 app = create_app()
 version = package_version()
 assert app.version == version, (app.version, version)
 assert version != "0+unknown", version
-payload = health_payload(get_store(), get_settings())
+store = app.state.job_store
+assert isinstance(store, JobStore), type(store)
+payload = health_payload(store, get_settings())
 assert "checks" in payload, payload
 print(f"api ok version={version}")
 PY
