@@ -1,6 +1,6 @@
 [project]
 name = "peptaris-route-agent"
-version = "0.1.0"
+version = "0.2.0"
 description = "Synthesizability checker for designed peptide analogs"
 readme = "README.md"
 requires-python = ">=3.12"
