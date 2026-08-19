@@ -18,7 +18,7 @@ jobs:
     timeout-minutes: 90
     env:
       ROUTE_AGENT_MOLECULAR_SKIP_3D: "true"
-      ROUTE_AGENT_EVAL_OUTPUT: ${{ runner.temp }}/eval
+      ROUTE_AGENT_EVAL_OUTPUT: ${{ github.workspace }}/eval-out
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
     steps:
