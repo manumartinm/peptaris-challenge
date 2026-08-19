@@ -1,0 +1,11 @@
+title = "route-agent"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Local stack templates, not live credentials"
+paths = [
+  '''^\.env\.example$''',
+  '''^infra/\.env\.example$''',
+]

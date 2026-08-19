@@ -1,0 +1,114 @@
+[project]
+name = "peptaris-route-agent"
+version = "0.1.0"
+description = "Synthesizability checker for designed peptide analogs"
+readme = "README.md"
+requires-python = ">=3.12"
+license = "LicenseRef-Proprietary"
+license-files = ["LICENSE"]
+keywords = ["peptide", "synthesizability", "chemistry"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Science/Research",
+    "License :: Other/Proprietary License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Chemistry",
+    "Typing :: Typed",
+]
+dependencies = [
+    "langfuse>=4.14",
+    "langgraph>=0.3",
+    "litellm>=1.60",
+    "openpyxl>=3.1",
+    "pydantic-settings>=2.7",
+    "pydantic>=2.10",
+    "jsonschema>=4.23",
+    "pymupdf>=1.25",
+    "pymupdf4llm>=0.0.17",
+    "click>=8.1",
+    "keyring>=25.0",
+    "platformdirs>=4.3",
+    "rich>=13.9",
+    "deepagents>=0.7.6",
+    "networkx>=3.6.1",
+    "langchain-openai>=1.5.1",
+    "rdkit>=2026.3.5",
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.34",
+    "loguru>=0.7",
+]
+
+[project.scripts]
+route-agent = "route_agent_cli.app:app"
+route-agent-api = "route_agent_api.main:main"
+
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "build>=1.2",
+    "httpx>=0.28",
+    "ipykernel>=7.3.0",
+    "mypy>=1.14",
+    "nbconvert>=7.17.1",
+    "pytest-cov>=6.0",
+    "pytest-mock>=3.14",
+    "pytest>=8.3",
+    "ruff>=0.9",
+    "twine>=6.0",
+    "types-networkx>=3.6.1.20260728",
+]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src",
+    "/tests",
+    "/scripts",
+    "/LICENSE",
+    "/README.md",
+    "/CHANGELOG.md",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/route_agent", "src/route_agent_cli", "src/route_agent_api"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"src/route_agent/resources/extracted_families.json" = "route_agent/resources/extracted_families.json"
+"src/route_agent/resources/molecular_fragments.json" = "route_agent/resources/molecular_fragments.json"
+"src/route_agent/resources/ApexChem_templates_and_targets.xlsx" = "route_agent/resources/ApexChem_templates_and_targets.xlsx"
+"src/route_agent/resources/schema.json" = "route_agent/resources/schema.json"
+"src/route_agent/resources/request_schema.json" = "route_agent/resources/request_schema.json"
+"src/route_agent/resources/score.py" = "route_agent/resources/score.py"
+
+[tool.ruff]
+target-version = "py312"
+src = ["src", "tests", "scripts"]
+line-length = 88
+extend-exclude = ["src/route_agent/resources"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["route_agent", "route_agent_cli", "route_agent_api", "tests"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+mypy_path = "src"
+explicit_package_bases = true
+exclude = ["src/route_agent/resources"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = ["--strict-markers", "-m", "not live and not eval"]
+markers = [
+    "live: calls a real model; skipped in CI",
+    "eval: official design_requests.jsonl harness; run with -m eval",
+]

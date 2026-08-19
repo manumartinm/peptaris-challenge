@@ -1,0 +1,119 @@
+{
+  "$defs": {
+    "ModificationFamily": {
+      "enum": [
+        "spps_foundation",
+        "special_residues",
+        "n_methylation",
+        "c_term_amidation",
+        "n_term_acetylation",
+        "lipidation",
+        "pegylation",
+        "glycosylation",
+        "cyclization",
+        "hydrocarbon_stapling",
+        "disulfide",
+        "biaryl_bisalkylation",
+        "aza_peptide",
+        "retro_inverso",
+        "charge_hybrids"
+      ],
+      "title": "ModificationFamily",
+      "type": "string"
+    },
+    "ModificationRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "family": {
+          "$ref": "#/$defs/ModificationFamily"
+        },
+        "site": {
+          "title": "Site",
+          "type": "string"
+        },
+        "detail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Detail"
+        }
+      },
+      "required": [
+        "family",
+        "site"
+      ],
+      "title": "ModificationRequest",
+      "type": "object"
+    },
+    "ParentCTerminus": {
+      "enum": [
+        "free_acid",
+        "amide",
+        "alcohol"
+      ],
+      "title": "ParentCTerminus",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "request_id": {
+      "title": "Request Id",
+      "type": "string"
+    },
+    "parent_name": {
+      "title": "Parent Name",
+      "type": "string"
+    },
+    "sequence": {
+      "title": "Sequence",
+      "type": "string"
+    },
+    "parent_c_terminus": {
+      "$ref": "#/$defs/ParentCTerminus"
+    },
+    "residue_annotations": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Residue Annotations",
+      "type": "object"
+    },
+    "parent_features": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "title": "Parent Features",
+      "type": "array"
+    },
+    "modifications": {
+      "items": {
+        "$ref": "#/$defs/ModificationRequest"
+      },
+      "title": "Modifications",
+      "type": "array"
+    },
+    "intent": {
+      "title": "Intent",
+      "type": "string"
+    }
+  },
+  "required": [
+    "request_id",
+    "parent_name",
+    "sequence",
+    "parent_c_terminus",
+    "modifications",
+    "intent"
+  ],
+  "title": "DesignRequest",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

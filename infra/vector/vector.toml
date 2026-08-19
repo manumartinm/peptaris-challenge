@@ -1,0 +1,56 @@
+[api]
+enabled = true
+address = "127.0.0.1:8686"
+
+[sources.route_agent_jsonl]
+type = "file"
+include = ["/var/log/route-agent/*.jsonl"]
+read_from = "beginning"
+ignore_older_secs = 0
+
+[sources.route_agent_jsonl.fingerprint]
+strategy = "device_and_inode"
+
+[transforms.normalize]
+type = "remap"
+inputs = ["route_agent_jsonl"]
+source = '''
+parsed, err = parse_json(.message)
+if err != null {
+  abort
+}
+. = merge!(., parsed)
+ts, ts_err = parse_timestamp(.timestamp, format: "%+")
+if ts_err == null {
+  .timestamp = format_timestamp!(ts, format: "%Y-%m-%d %H:%M:%S%.3f")
+} else {
+  .timestamp = format_timestamp!(now(), format: "%Y-%m-%d %H:%M:%S%.3f")
+}
+.level = to_string(.level) ?? "INFO"
+.logger = to_string(.logger) ?? "route_agent"
+.message = to_string(.message) ?? ""
+.event = to_string(.event) ?? .message
+.component = to_string(.component) ?? .logger
+.extra = encode_json(.)
+'''
+
+[sinks.clickhouse]
+type = "clickhouse"
+inputs = ["normalize"]
+endpoint = "http://clickhouse:8123"
+database = "route_agent_observability"
+table = "logs"
+skip_unknown_fields = true
+date_time_best_effort = true
+compression = "gzip"
+auth.strategy = "basic"
+auth.user = "${CLICKHOUSE_USER:-clickhouse}"
+auth.password = "${CLICKHOUSE_PASSWORD:-clickhouse}"
+batch.max_events = 100
+batch.timeout_secs = 2
+acknowledgements.enabled = true
+
+[sinks.clickhouse.request]
+retry_attempts = 10
+retry_initial_backoff_secs = 1
+retry_max_duration_secs = 30

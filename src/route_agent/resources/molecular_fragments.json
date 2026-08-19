@@ -1,0 +1,392 @@
+{
+  "schema_version": "1.0.0",
+  "fragments": [
+    {
+      "id": "gly",
+      "aliases": ["G", "Gly", "GLY"],
+      "kind": "residue",
+      "smiles": "[*:1]NCC(=O)[*:2]",
+      "ports": {
+        "N": {"map": 1, "cap": "H"},
+        "C": {"map": 2, "cap": "OH"}
+      }
+    },
+    {
+      "id": "ala",
+      "aliases": ["A", "Ala", "ALA"],
+      "kind": "residue",
+      "smiles": "[*:1]N[C@@H](C)C(=O)[*:2]",
+      "d_smiles": "[*:1]N[C@H](C)C(=O)[*:2]",
+      "ports": {
+        "N": {"map": 1, "cap": "H"},
+        "C": {"map": 2, "cap": "OH"}
+      }
+    },
+    {
+      "id": "ser",
+      "aliases": ["S", "Ser", "SER"],
+      "kind": "residue",
+      "smiles": "[*:1]N[C@@H](CO)C(=O)[*:2]",
+      "d_smiles": "[*:1]N[C@H](CO)C(=O)[*:2]",
+      "ports": {
+        "N": {"map": 1, "cap": "H"},
+        "C": {"map": 2, "cap": "OH"}
+      }
+    },
+    {
+      "id": "thr",
+      "aliases": ["T", "Thr", "THR"],
+      "kind": "residue",
+      "smiles": "[*:1]N[C@@H]([C@@H](C)O)C(=O)[*:2]",
+      "d_smiles": "[*:1]N[C@H]([C@@H](C)O)C(=O)[*:2]",
+      "ports": {
+        "N": {"map": 1, "cap": "H"},
+        "C": {"map": 2, "cap": "OH"}
+      }
+    },
+    {
+      "id": "cys",
+      "aliases": ["C", "Cys", "CYS"],
+      "kind": "residue",
+      "smiles": "[*:1]N[C@@H](CS[*:3])C(=O)[*:2]",
+      "d_smiles": "[*:1]N[C@H](CS[*:3])C(=O)[*:2]",
+      "ports": {
+        "N": {"map": 1, "cap": "H"},
+        "C": {"map": 2, "cap": "OH"},
+        "S": {"map": 3, "cap": "H"}
+      },
+      "pka": [{"name": "side_chain", "value": 8.3, "kind": "acid"}]
+    },
+    {
+      "id": "val",
+      "aliases": ["V", "Val", "VAL"],
+      "kind": "residue",
+      "smiles": "[*:1]N[C@@H](C(C)C)C(=O)[*:2]",
+      "d_smiles": "[*:1]N[C@H](C(C)C)C(=O)[*:2]",
+      "ports": {
+        "N": {"map": 1, "cap": "H"},
+        "C": {"map": 2, "cap": "OH"}
+      }
+    },
+    {
+      "id": "leu",
+      "aliases": ["L", "Leu", "LEU"],
+      "kind": "residue",
+      "smiles": "[*:1]N[C@@H](CC(C)C)C(=O)[*:2]",
+      "d_smiles": "[*:1]N[C@H](CC(C)C)C(=O)[*:2]",
+      "ports": {
+        "N": {"map": 1, "cap": "H"},
+        "C": {"map": 2, "cap": "OH"}
+      }
+    },
+    {
+      "id": "ile",
+      "aliases": ["I", "Ile", "ILE"],
+      "kind": "residue",
+      "smiles": "[*:1]N[C@@H]([C@@H](C)CC)C(=O)[*:2]",
+      "d_smiles": "[*:1]N[C@H]([C@@H](C)CC)C(=O)[*:2]",
+      "ports": {
+        "N": {"map": 1, "cap": "H"},
+        "C": {"map": 2, "cap": "OH"}
+      }
+    },
+    {
+      "id": "met",
+      "aliases": ["M", "Met", "MET"],
+      "kind": "residue",
+      "smiles": "[*:1]N[C@@H](CCSC)C(=O)[*:2]",
+      "d_smiles": "[*:1]N[C@H](CCSC)C(=O)[*:2]",
+      "ports": {
+        "N": {"map": 1, "cap": "H"},
+        "C": {"map": 2, "cap": "OH"}
+      }
+    },
+    {
+      "id": "pro",
+      "aliases": ["P", "Pro", "PRO"],
+      "kind": "residue",
+      "smiles": "[*:1]N1CCC[C@@H]1C(=O)[*:2]",
+      "d_smiles": "[*:1]N1CCC[C@H]1C(=O)[*:2]",
+      "ports": {
+        "N": {"map": 1, "cap": "H"},
+        "C": {"map": 2, "cap": "OH"}
+      }
+    },
+    {
+      "id": "phe",
+      "aliases": ["F", "Phe", "PHE"],
+      "kind": "residue",
+      "smiles": "[*:1]N[C@@H](Cc1ccccc1)C(=O)[*:2]",
+      "d_smiles": "[*:1]N[C@H](Cc1ccccc1)C(=O)[*:2]",
+      "ports": {
+        "N": {"map": 1, "cap": "H"},
+        "C": {"map": 2, "cap": "OH"}
+      }
+    },
+    {
+      "id": "tyr",
+      "aliases": ["Y", "Tyr", "TYR"],
+      "kind": "residue",
+      "smiles": "[*:1]N[C@@H](Cc1ccc(O)cc1)C(=O)[*:2]",
+      "d_smiles": "[*:1]N[C@H](Cc1ccc(O)cc1)C(=O)[*:2]",
+      "ports": {
+        "N": {"map": 1, "cap": "H"},
+        "C": {"map": 2, "cap": "OH"}
+      },
+      "pka": [{"name": "side_chain", "value": 10.1, "kind": "acid"}]
+    },
+    {
+      "id": "trp",
+      "aliases": ["W", "Trp", "TRP"],
+      "kind": "residue",
+      "smiles": "[*:1]N[C@@H](Cc1c[nH]c2ccccc12)C(=O)[*:2]",
+      "d_smiles": "[*:1]N[C@H](Cc1c[nH]c2ccccc12)C(=O)[*:2]",
+      "ports": {
+        "N": {"map": 1, "cap": "H"},
+        "C": {"map": 2, "cap": "OH"}
+      }
+    },
+    {
+      "id": "asp",
+      "aliases": ["D", "Asp", "ASP"],
+      "kind": "residue",
+      "smiles": "[*:1]N[C@@H](CC(=O)[*:3])C(=O)[*:2]",
+      "d_smiles": "[*:1]N[C@H](CC(=O)[*:3])C(=O)[*:2]",
+      "ports": {
+        "N": {"map": 1, "cap": "H"},
+        "C": {"map": 2, "cap": "OH"},
+        "S": {"map": 3, "cap": "OH"}
+      },
+      "pka": [{"name": "side_chain", "value": 3.9, "kind": "acid"}]
+    },
+    {
+      "id": "glu",
+      "aliases": ["E", "Glu", "GLU"],
+      "kind": "residue",
+      "smiles": "[*:1]N[C@@H](CCC(=O)[*:3])C(=O)[*:2]",
+      "d_smiles": "[*:1]N[C@H](CCC(=O)[*:3])C(=O)[*:2]",
+      "ports": {
+        "N": {"map": 1, "cap": "H"},
+        "C": {"map": 2, "cap": "OH"},
+        "S": {"map": 3, "cap": "OH"}
+      },
+      "pka": [{"name": "side_chain", "value": 4.3, "kind": "acid"}]
+    },
+    {
+      "id": "asn",
+      "aliases": ["N", "Asn", "ASN"],
+      "kind": "residue",
+      "smiles": "[*:1]N[C@@H](CC(=O)N)C(=O)[*:2]",
+      "d_smiles": "[*:1]N[C@H](CC(=O)N)C(=O)[*:2]",
+      "ports": {
+        "N": {"map": 1, "cap": "H"},
+        "C": {"map": 2, "cap": "OH"}
+      }
+    },
+    {
+      "id": "gln",
+      "aliases": ["Q", "Gln", "GLN"],
+      "kind": "residue",
+      "smiles": "[*:1]N[C@@H](CCC(=O)N)C(=O)[*:2]",
+      "d_smiles": "[*:1]N[C@H](CCC(=O)N)C(=O)[*:2]",
+      "ports": {
+        "N": {"map": 1, "cap": "H"},
+        "C": {"map": 2, "cap": "OH"}
+      }
+    },
+    {
+      "id": "lys",
+      "aliases": ["K", "Lys", "LYS"],
+      "kind": "residue",
+      "smiles": "[*:1]N[C@@H](CCCCN[*:3])C(=O)[*:2]",
+      "d_smiles": "[*:1]N[C@H](CCCCN[*:3])C(=O)[*:2]",
+      "ports": {
+        "N": {"map": 1, "cap": "H"},
+        "C": {"map": 2, "cap": "OH"},
+        "S": {"map": 3, "cap": "H"}
+      },
+      "pka": [{"name": "side_chain", "value": 10.5, "kind": "base"}]
+    },
+    {
+      "id": "arg",
+      "aliases": ["R", "Arg", "ARG"],
+      "kind": "residue",
+      "smiles": "[*:1]N[C@@H](CCCNC(=N)N)C(=O)[*:2]",
+      "d_smiles": "[*:1]N[C@H](CCCNC(=N)N)C(=O)[*:2]",
+      "ports": {
+        "N": {"map": 1, "cap": "H"},
+        "C": {"map": 2, "cap": "OH"}
+      },
+      "pka": [{"name": "side_chain", "value": 12.5, "kind": "base"}]
+    },
+    {
+      "id": "his",
+      "aliases": ["H", "His", "HIS"],
+      "kind": "residue",
+      "smiles": "[*:1]N[C@@H](Cc1c[nH]cn1)C(=O)[*:2]",
+      "d_smiles": "[*:1]N[C@H](Cc1c[nH]cn1)C(=O)[*:2]",
+      "ports": {
+        "N": {"map": 1, "cap": "H"},
+        "C": {"map": 2, "cap": "OH"}
+      },
+      "pka": [{"name": "side_chain", "value": 6.0, "kind": "base"}]
+    },
+    {
+      "id": "nle",
+      "aliases": ["Nle", "NLE", "norleucine"],
+      "kind": "residue",
+      "smiles": "[*:1]N[C@@H](CCCC)C(=O)[*:2]",
+      "d_smiles": "[*:1]N[C@H](CCCC)C(=O)[*:2]",
+      "ports": {
+        "N": {"map": 1, "cap": "H"},
+        "C": {"map": 2, "cap": "OH"}
+      }
+    },
+    {
+      "id": "aib",
+      "aliases": ["Aib", "AIB"],
+      "kind": "residue",
+      "smiles": "[*:1]NC(C)(C)C(=O)[*:2]",
+      "ports": {
+        "N": {"map": 1, "cap": "H"},
+        "C": {"map": 2, "cap": "OH"}
+      }
+    },
+    {
+      "id": "cit",
+      "aliases": ["Cit", "CIT", "citrulline"],
+      "kind": "residue",
+      "smiles": "[*:1]N[C@@H](CCCNC(=O)N)C(=O)[*:2]",
+      "d_smiles": "[*:1]N[C@H](CCCNC(=O)N)C(=O)[*:2]",
+      "ports": {
+        "N": {"map": 1, "cap": "H"},
+        "C": {"map": 2, "cap": "OH"}
+      }
+    },
+    {
+      "id": "orn",
+      "aliases": ["Orn", "ORN", "ornithine"],
+      "kind": "residue",
+      "smiles": "[*:1]N[C@@H](CCCN[*:3])C(=O)[*:2]",
+      "d_smiles": "[*:1]N[C@H](CCCN[*:3])C(=O)[*:2]",
+      "ports": {
+        "N": {"map": 1, "cap": "H"},
+        "C": {"map": 2, "cap": "OH"},
+        "S": {"map": 3, "cap": "H"}
+      },
+      "pka": [{"name": "side_chain", "value": 10.8, "kind": "base"}]
+    },
+    {
+      "id": "nal",
+      "aliases": ["Nal", "NAL", "2-Nal"],
+      "kind": "residue",
+      "smiles": "[*:1]N[C@@H](Cc1ccc2ccccc2c1)C(=O)[*:2]",
+      "d_smiles": "[*:1]N[C@H](Cc1ccc2ccccc2c1)C(=O)[*:2]",
+      "ports": {
+        "N": {"map": 1, "cap": "H"},
+        "C": {"map": 2, "cap": "OH"}
+      }
+    },
+    {
+      "id": "threoninol",
+      "aliases": ["threoninol", "Thr-ol", "Thr-ol)", "threoninol (Thr-ol)"],
+      "kind": "residue",
+      "smiles": "[*:1]N[C@@H]([C@@H](C)O)CO",
+      "d_smiles": "[*:1]N[C@H]([C@@H](C)O)CO",
+      "ports": {
+        "N": {"map": 1, "cap": "H"}
+      }
+    },
+    {
+      "id": "s5",
+      "aliases": ["S5"],
+      "kind": "residue",
+      "smiles": "[*:1]N[C@@H](CCC=[*:3])C(=O)[*:2]",
+      "d_smiles": "[*:1]N[C@H](CCC=[*:3])C(=O)[*:2]",
+      "ports": {
+        "N": {"map": 1, "cap": "H"},
+        "C": {"map": 2, "cap": "OH"},
+        "S": {"map": 3, "cap": "H"}
+      }
+    },
+    {
+      "id": "acetyl",
+      "aliases": ["Ac", "acetyl"],
+      "kind": "cap",
+      "smiles": "CC(=O)[*:1]",
+      "ports": {
+        "C": {"map": 1, "cap": "OH"}
+      }
+    },
+    {
+      "id": "malonyl",
+      "aliases": ["malonyl"],
+      "kind": "cap",
+      "smiles": "OC(=O)CC(=O)[*:1]",
+      "ports": {
+        "C": {"map": 1, "cap": "OH"}
+      },
+      "pka": [{"name": "carboxyl", "value": 2.8, "kind": "acid"}]
+    },
+    {
+      "id": "aeea",
+      "aliases": ["AEEA"],
+      "kind": "linker",
+      "smiles": "[*:1]NCCOCCOCC(=O)[*:2]",
+      "ports": {
+        "N": {"map": 1, "cap": "H"},
+        "C": {"map": 2, "cap": "OH"}
+      }
+    },
+    {
+      "id": "gglu",
+      "aliases": ["gGlu", "gGlu", "gammaGlu"],
+      "kind": "linker",
+      "smiles": "[*:1]N[C@@H](CCC(=O)[*:2])C(=O)O",
+      "ports": {
+        "N": {"map": 1, "cap": "H"},
+        "C": {"map": 2, "cap": "OH"}
+      },
+      "pka": [{"name": "alpha_carboxyl", "value": 2.2, "kind": "acid"}]
+    },
+    {
+      "id": "c16",
+      "aliases": ["C16", "palmitoyl"],
+      "kind": "lipid",
+      "smiles": "CCCCCCCCCCCCCCCC(=O)[*:1]",
+      "ports": {
+        "C": {"map": 1, "cap": "OH"}
+      }
+    },
+    {
+      "id": "c18_diacid",
+      "aliases": ["C18-diacid", "C18"],
+      "kind": "lipid",
+      "smiles": "OC(=O)CCCCCCCCCCCCCCCCC(=O)[*:1]",
+      "ports": {
+        "C": {"map": 1, "cap": "OH"}
+      },
+      "pka": [{"name": "carboxyl", "value": 4.5, "kind": "acid"}]
+    },
+    {
+      "id": "peg4",
+      "aliases": ["PEG4", "Fmoc-PEG4"],
+      "kind": "conjugate",
+      "smiles": "NCCOCCOCCOCCOCC(=O)[*:1]",
+      "ports": {
+        "C": {"map": 1, "cap": "OH"}
+      },
+      "pka": [{"name": "terminal_amine", "value": 9.0, "kind": "base"}]
+    },
+    {
+      "id": "peg8",
+      "aliases": ["PEG8", "Fmoc-PEG8"],
+      "kind": "conjugate",
+      "smiles": "NCCOCCOCCOCCOCCOCCOCCOCCOCC(=O)[*:1]",
+      "ports": {
+        "C": {"map": 1, "cap": "OH"}
+      },
+      "pka": [{"name": "terminal_amine", "value": 9.0, "kind": "base"}]
+    }
+  ]
+}

@@ -1,0 +1,178 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "description": "Paste a run_id, request_id, or job_id to reconstruct the timeline.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {
+      "asDropdown": true,
+      "icon": "dashboard",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [
+        "route-agent"
+      ],
+      "title": "Route Agent",
+      "type": "dashboards"
+    }
+  ],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "route-agent-clickhouse"
+      },
+      "description": "Full correlated log stream for the selected ids.",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 16,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "route-agent-clickhouse"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "queryType": "table",
+          "rawSql": "SELECT\n  timestamp,\n  level,\n  event,\n  component,\n  stage,\n  status,\n  duration_ms,\n  message,\n  run_id,\n  request_id,\n  job_id\nFROM route_agent_observability.logs\nWHERE $__timeFilter(timestamp) AND (empty('${run_id:raw}') OR run_id = '${run_id:raw}') AND (empty('${request_id:raw}') OR request_id = '${request_id:raw}') AND (empty('${job_id:raw}') OR job_id = '${job_id:raw}')\nORDER BY timestamp\nLIMIT 500"
+        }
+      ],
+      "title": "Timeline",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "route-agent-clickhouse"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "id": 2,
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "route-agent-clickhouse"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "queryType": "table",
+          "rawSql": "SELECT\n  timestamp,\n  JSONExtractString(extra, 'kind') AS kind,\n  stage,\n  status,\n  JSONExtractString(extra, 'detail') AS detail,\n  run_id,\n  request_id\nFROM route_agent_observability.logs\nWHERE event LIKE 'pipeline_event_%' AND $__timeFilter(timestamp) AND (empty('${run_id:raw}') OR run_id = '${run_id:raw}') AND (empty('${request_id:raw}') OR request_id = '${request_id:raw}') AND (empty('${job_id:raw}') OR job_id = '${job_id:raw}')\nORDER BY timestamp\nLIMIT 200"
+        }
+      ],
+      "title": "Stage pairs",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "route-agent-clickhouse"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "id": 3,
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "route-agent-clickhouse"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "queryType": "table",
+          "rawSql": "SELECT\n  timestamp,\n  event,\n  JSONExtractString(extra, 'method') AS method,\n  JSONExtractString(extra, 'path') AS path,\n  JSONExtractInt(extra, 'status_code') AS status_code,\n  duration_ms,\n  run_id,\n  job_id,\n  request_id\nFROM route_agent_observability.logs\nWHERE event IN ('http_request','http_response','job_queued','job_running','job_completed','job_failed')\n  AND $__timeFilter(timestamp) AND (empty('${run_id:raw}') OR run_id = '${run_id:raw}') AND (empty('${request_id:raw}') OR request_id = '${request_id:raw}') AND (empty('${job_id:raw}') OR job_id = '${job_id:raw}')\nORDER BY timestamp DESC\nLIMIT 100"
+        }
+      ],
+      "title": "HTTP / jobs",
+      "type": "table"
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 39,
+  "tags": [
+    "route-agent",
+    "explorer"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "",
+          "value": ""
+        },
+        "label": "run_id",
+        "name": "run_id",
+        "options": [],
+        "query": "",
+        "skipUrlSync": false,
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "",
+          "value": ""
+        },
+        "label": "request_id",
+        "name": "request_id",
+        "options": [],
+        "query": "",
+        "skipUrlSync": false,
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "",
+          "value": ""
+        },
+        "label": "job_id",
+        "name": "job_id",
+        "options": [],
+        "query": "",
+        "skipUrlSync": false,
+        "type": "textbox"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "title": "Route Agent / Run Explorer",
+  "uid": "route-agent-explorer",
+  "version": 1
+}

@@ -1,0 +1,441 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "description": "Stage lifecycle, walk, post-graph, and verdicts.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {
+      "asDropdown": true,
+      "icon": "dashboard",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [
+        "route-agent"
+      ],
+      "title": "Route Agent",
+      "type": "dashboards"
+    }
+  ],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "route-agent-clickhouse"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "route-agent-clickhouse"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "queryType": "table",
+          "rawSql": "SELECT count() FROM route_agent_observability.logs WHERE event = 'pipeline_complete' AND $__timeFilter(timestamp) AND (empty('${run_id:raw}') OR run_id = '${run_id:raw}') AND (empty('${request_id:raw}') OR request_id = '${request_id:raw}') AND (empty('${job_id:raw}') OR job_id = '${job_id:raw}')"
+        }
+      ],
+      "title": "Pipelines completed",
+      "type": "stat",
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "route-agent-clickhouse"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 0
+      },
+      "id": 2,
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "route-agent-clickhouse"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "queryType": "table",
+          "rawSql": "SELECT quantile(0.95)(duration_ms) FROM route_agent_observability.logs WHERE event = 'pipeline_complete' AND $__timeFilter(timestamp) AND (empty('${run_id:raw}') OR run_id = '${run_id:raw}') AND (empty('${request_id:raw}') OR request_id = '${request_id:raw}') AND (empty('${job_id:raw}') OR job_id = '${job_id:raw}')"
+        }
+      ],
+      "title": "p95 pipeline",
+      "type": "stat",
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "route-agent-clickhouse"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 0
+      },
+      "id": 3,
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "route-agent-clickhouse"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "queryType": "table",
+          "rawSql": "SELECT count() FROM route_agent_observability.logs WHERE event = 'walk_complete' AND $__timeFilter(timestamp) AND (empty('${run_id:raw}') OR run_id = '${run_id:raw}') AND (empty('${request_id:raw}') OR request_id = '${request_id:raw}') AND (empty('${job_id:raw}') OR job_id = '${job_id:raw}')"
+        }
+      ],
+      "title": "Walks",
+      "type": "stat",
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "route-agent-clickhouse"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      },
+      "id": 4,
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "route-agent-clickhouse"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "queryType": "table",
+          "rawSql": "SELECT uniqExact(status) FROM route_agent_observability.logs WHERE event = 'pipeline_complete' AND $__timeFilter(timestamp) AND (empty('${run_id:raw}') OR run_id = '${run_id:raw}') AND (empty('${request_id:raw}') OR request_id = '${request_id:raw}') AND (empty('${job_id:raw}') OR job_id = '${job_id:raw}')"
+        }
+      ],
+      "title": "Verdicts",
+      "type": "stat",
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "route-agent-clickhouse"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 4
+      },
+      "id": 5,
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "route-agent-clickhouse"
+          },
+          "editorType": "sql",
+          "format": 0,
+          "queryType": "timeseries",
+          "rawSql": "SELECT timestamp AS time, duration_ms FROM route_agent_observability.logs WHERE event = 'pipeline_complete' AND duration_ms IS NOT NULL AND $__timeFilter(timestamp) AND (empty('${run_id:raw}') OR run_id = '${run_id:raw}') AND (empty('${request_id:raw}') OR request_id = '${request_id:raw}') AND (empty('${job_id:raw}') OR job_id = '${job_id:raw}') ORDER BY time"
+        }
+      ],
+      "title": "Pipeline duration",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "route-agent-clickhouse"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 4
+      },
+      "id": 6,
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "route-agent-clickhouse"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "queryType": "table",
+          "rawSql": "SELECT if(empty(status), 'unknown', status) AS verdict, count() AS n FROM route_agent_observability.logs WHERE event = 'pipeline_complete' AND $__timeFilter(timestamp) AND (empty('${run_id:raw}') OR run_id = '${run_id:raw}') AND (empty('${request_id:raw}') OR request_id = '${request_id:raw}') AND (empty('${job_id:raw}') OR job_id = '${job_id:raw}') GROUP BY verdict ORDER BY n DESC"
+        }
+      ],
+      "title": "Verdict mix",
+      "type": "piechart",
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "values": [
+            "value",
+            "percent"
+          ]
+        }
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "route-agent-clickhouse"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 12
+      },
+      "id": 7,
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "route-agent-clickhouse"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "queryType": "table",
+          "rawSql": "SELECT\n  stage,\n  countIf(JSONExtractString(extra, 'kind') = 'stage_started' OR event = 'pipeline_event_stage_started') AS started,\n  countIf(JSONExtractString(extra, 'kind') = 'stage_finished' OR event = 'pipeline_event_stage_finished') AS finished,\n  avg(duration_ms) AS avg_ms\nFROM route_agent_observability.logs\nWHERE stage IS NOT NULL AND $__timeFilter(timestamp) AND (empty('${run_id:raw}') OR run_id = '${run_id:raw}') AND (empty('${request_id:raw}') OR request_id = '${request_id:raw}') AND (empty('${job_id:raw}') OR job_id = '${job_id:raw}')\nGROUP BY stage\nORDER BY stage"
+        }
+      ],
+      "title": "Stage activity",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "route-agent-clickhouse"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 12
+      },
+      "id": 8,
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "route-agent-clickhouse"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "queryType": "table",
+          "rawSql": "SELECT event, count() AS n, avg(duration_ms) AS avg_ms, quantile(0.95)(duration_ms) AS p95_ms, max(duration_ms) AS max_ms FROM route_agent_observability.logs WHERE duration_ms IS NOT NULL AND $__timeFilter(timestamp) AND (empty('${run_id:raw}') OR run_id = '${run_id:raw}') AND (empty('${request_id:raw}') OR request_id = '${request_id:raw}') AND (empty('${job_id:raw}') OR job_id = '${job_id:raw}') GROUP BY event ORDER BY avg_ms DESC LIMIT 25"
+        }
+      ],
+      "title": "Latency by event",
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "route-agent-clickhouse"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 21
+      },
+      "id": 9,
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "route-agent-clickhouse"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "queryType": "table",
+          "rawSql": "SELECT\n  timestamp,\n  run_id,\n  request_id,\n  event,\n  JSONExtractString(extra, 'process') AS process,\n  JSONExtractString(extra, 'family') AS family,\n  JSONExtractString(extra, 'site') AS site,\n  status,\n  JSONExtract(extra, 'passed', 'Nullable(String)') AS passed\nFROM route_agent_observability.logs\nWHERE event IN ('walk_start','walk_stage_start','walk_check_start','walk_check_done','walk_stage_done','walk_complete')\n  AND $__timeFilter(timestamp) AND (empty('${run_id:raw}') OR run_id = '${run_id:raw}') AND (empty('${request_id:raw}') OR request_id = '${request_id:raw}') AND (empty('${job_id:raw}') OR job_id = '${job_id:raw}')\nORDER BY timestamp DESC\nLIMIT 200"
+        }
+      ],
+      "title": "Walk checks",
+      "type": "table"
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 39,
+  "tags": [
+    "route-agent",
+    "pipeline"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "",
+          "value": ""
+        },
+        "label": "run_id",
+        "name": "run_id",
+        "options": [],
+        "query": "",
+        "skipUrlSync": false,
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "",
+          "value": ""
+        },
+        "label": "request_id",
+        "name": "request_id",
+        "options": [],
+        "query": "",
+        "skipUrlSync": false,
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "",
+          "value": ""
+        },
+        "label": "job_id",
+        "name": "job_id",
+        "options": [],
+        "query": "",
+        "skipUrlSync": false,
+        "type": "textbox"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "title": "Route Agent / Pipeline",
+  "uid": "route-agent-pipeline",
+  "version": 1
+}

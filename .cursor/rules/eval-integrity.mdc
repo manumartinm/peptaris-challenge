@@ -1,0 +1,21 @@
+---
+description: Official scorer, commit-before-run eval cases, no rewritten keys
+globs: tests/eval/**,data/**
+alwaysApply: false
+---
+
+# Eval integrity
+
+- Invoke the official scorer. In a checkout, tests use `data/score.py`. Installed runs resolve `score_py_path()` (packaged `resources/score.py`, then `data/` fallback). Do not write a replacement scorer. Do not silently copy one file over the other to make a test pass.
+- Commit each self-written case and its expected key **before** the first agent run against it.
+- If a case is wrong after seeing output, mark it referred. Do not edit the expected answer to match the system.
+- Do not modify `data/schema.json` or the shipped workbooks to make a test pass.
+
+```python
+# ❌ BAD — custom scoring
+assert output["verdict"] == expected["verdict"]
+
+# ✅ GOOD — shipped scorer
+result = EvalHarness(score_py=Path("data/score.py")).score(expected_path, actual_path)
+assert result.headline_pass_rate is not None
+```

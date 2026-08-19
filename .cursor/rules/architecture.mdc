@@ -1,0 +1,25 @@
+---
+description: Cohesive modules, injection, and the deterministic vs LLM boundary
+alwaysApply: true
+---
+
+# Architecture
+
+- One cohesive concept per module. Split when a file holds two concepts that share no state. Inject collaborators in `__init__`. No module-level LiteLLM, Langfuse, or HTTP clients.
+- Core (`route_agent`) never imports `route_agent_cli` or `route_agent_api`. The API never imports the CLI. Adapters use `composition/wiring`.
+- LangGraph may back the Deep Agent graph. Literature fetch stays a sandbox + tools, not a chemistry loop.
+- The model does not decide site arithmetic, enums, provenance reachability, or verdict/severity coherence.
+- Never fabricate a corpus `ref`. If the row is not in the workbook, use `inference` or `external`, or put the gap in `unknowns`.
+
+```python
+# ❌ BAD — global client, mixed responsibilities
+llm = litellm
+def run(req): ...
+
+# ✅ GOOD
+class RoutePipeline:
+    def __init__(self, parser: RequestParser, walker: ConflictWalker, llm: LlmClient) -> None:
+        self._parser = parser
+        self._walker = walker
+        self._llm = llm
+```

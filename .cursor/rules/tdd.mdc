@@ -1,0 +1,22 @@
+---
+description: Test-driven development; tests cover behavior, not existence
+alwaysApply: true
+---
+
+# TDD
+
+Write a failing test, then the minimum code that makes it pass. Do not add a class without a test that would fail if the behavior were wrong.
+
+Test observable outcomes: CLI JSON, `data/schema.json` validation, `data/score.py` headlines, literature graph state after mocked HTTP. Do not test that an enum member exists, that a module imports, or that a class has an attribute.
+
+```python
+# ❌ BAD
+def test_verdict_enum_has_feasible():
+    assert "feasible" in Verdict.__members__
+
+# ✅ GOOD
+def test_run_emits_schema_valid_json(tmp_path: Path) -> None:
+    result = runner.invoke(app, ["run", str(request_path), "-o", str(tmp_path / "out.json")])
+    assert result.exit_code == 0
+    subprocess.check_call(["python", "data/score.py", "--validate", str(tmp_path / "out.json"), "data/schema.json"])
+```

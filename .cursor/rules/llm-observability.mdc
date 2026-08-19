@@ -1,0 +1,26 @@
+---
+description: One Langfuse generation per real LLM attempt, never on cache hits
+globs: src/route_agent/llm/**/*.py,src/route_agent/agent/**/*.py
+alwaysApply: false
+---
+
+# LLM observability
+
+- Emit one Langfuse `generation` per real model attempt (structurer or Deep Agent). Name it after the objective.
+- Cache hits must not open a generation. Tokens and cost on the returned `LLMCall` stay zero.
+- Use `LangfuseRun.generation()` (via `trace_llm_generation`). Do not also attach a LangChain `CallbackHandler` for the same invoke.
+- Sanitize I/O through the tracer. Full payloads only when `ROUTE_AGENT_TRACE_PAYLOADS=true`.
+- Failed attempts mark the observation `level=ERROR`. Langfuse failures stay fail-open.
+
+```python
+# ❌ BAD — cache hit still traces a generation
+with run.generation("check_compatibility", {}):
+    return cached
+
+# ✅ GOOD
+cached = cache.lookup(process, site, state)
+if cached is not None:
+    return mark_cache_hit(cached)
+with trace_llm_generation(name=objective, model=model, metadata=meta, input_payload=payload):
+    return agent.invoke(payload)
+```

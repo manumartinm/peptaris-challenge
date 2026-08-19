@@ -1,0 +1,220 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          python-version: "3.12"
+          enable-cache: true
+
+      - name: Install
+        run: uv sync --frozen --group dev
+
+      - name: Lint
+        run: uv run ruff check src tests scripts
+
+      - name: Format
+        run: uv run ruff format --check src tests scripts
+
+  typecheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          python-version: "3.12"
+          enable-cache: true
+
+      - name: Install
+        run: uv sync --frozen --group dev
+
+      - name: Typecheck
+        run: uv run mypy src tests
+
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          python-version: ${{ matrix.python-version }}
+          enable-cache: true
+
+      - name: Install
+        run: uv sync --frozen --group dev
+
+      - name: Test
+        run: |
+          uv run pytest tests -m "not live and not eval" \
+            --junitxml=junit.xml \
+            --cov=src \
+            --cov-report=xml
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: test-results-${{ matrix.python-version }}
+          path: |
+            junit.xml
+            coverage.xml
+          retention-days: 7
+          if-no-files-found: error
+
+  eval-offline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      ROUTE_AGENT_MOLECULAR_SKIP_3D: "true"
+      ROUTE_AGENT_EVAL_OUTPUT: ${{ runner.temp }}/eval
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          python-version: "3.12"
+          enable-cache: true
+
+      - name: Install
+        run: uv sync --frozen --group dev
+
+      - name: Official dev-set eval (offline)
+        run: |
+          mkdir -p "$ROUTE_AGENT_EVAL_OUTPUT"
+          uv run pytest tests -m "eval and not live" \
+            --junitxml="$ROUTE_AGENT_EVAL_OUTPUT/junit.xml"
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: eval-offline
+          path: |
+            ${{ env.ROUTE_AGENT_EVAL_OUTPUT }}/actual.jsonl
+            ${{ env.ROUTE_AGENT_EVAL_OUTPUT }}/EVAL_REPORT.md
+            ${{ env.ROUTE_AGENT_EVAL_OUTPUT }}/junit.xml
+            ${{ env.ROUTE_AGENT_EVAL_OUTPUT }}/traces/
+          retention-days: 7
+          if-no-files-found: error
+
+  frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: trace-viewer
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: trace-viewer/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+
+  secrets:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Scan secrets
+        run: |
+          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v8.28.0/gitleaks_8.28.0_linux_x64.tar.gz" \
+            | tar -xz gitleaks
+          ./gitleaks detect --source . --redact --verbose
+
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          python-version: "3.12"
+          enable-cache: true
+
+      - name: Install
+        run: uv sync --frozen --group dev
+
+      - name: Build
+        run: uv build
+
+      - name: Check metadata
+        run: |
+          uv run twine check --strict dist/*
+          uv run python scripts/inspect_dist.py dist
+
+      - name: pipx smoke
+        run: |
+          uv tool install pipx
+          chmod +x scripts/dist_smoke.sh
+          wheel="$(ls dist/peptaris_route_agent-*.whl | head -n 1)"
+          DIST_SMOKE_PYTHON="$(uv python find 3.12)" ./scripts/dist_smoke.sh "$wheel"
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: python-dist
+          path: dist/
+          retention-days: 7
+          if-no-files-found: error
+
+  ci:
+    name: ci
+    if: always()
+    needs: [lint, typecheck, test, eval-offline, frontend, secrets, package]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: All required jobs passed
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          python3 - <<'PY'
+          import json, os, sys
+
+          needs = json.loads(os.environ["NEEDS"])
+          failed = [name for name, job in needs.items() if job.get("result") != "success"]
+          if failed:
+              print("failed jobs:", ", ".join(failed))
+              sys.exit(1)
+          print("all jobs passed")
+          PY

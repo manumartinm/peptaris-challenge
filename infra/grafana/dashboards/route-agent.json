@@ -1,0 +1,505 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "description": "Operational snapshot: runs, errors, latency, and volume.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {
+      "asDropdown": true,
+      "icon": "dashboard",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [
+        "route-agent"
+      ],
+      "title": "Route Agent",
+      "type": "dashboards"
+    }
+  ],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "route-agent-clickhouse"
+      },
+      "description": "Distinct run_id in the selected window.",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "route-agent-clickhouse"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "queryType": "table",
+          "rawSql": "SELECT uniqExact(run_id) FROM route_agent_observability.logs WHERE $__timeFilter(timestamp) AND (empty('${run_id:raw}') OR run_id = '${run_id:raw}') AND (empty('${request_id:raw}') OR request_id = '${request_id:raw}') AND (empty('${job_id:raw}') OR job_id = '${job_id:raw}')"
+        }
+      ],
+      "title": "Runs",
+      "type": "stat",
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "route-agent-clickhouse"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 4,
+        "y": 0
+      },
+      "id": 2,
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "route-agent-clickhouse"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "queryType": "table",
+          "rawSql": "SELECT count() FROM route_agent_observability.logs WHERE level IN ('ERROR','CRITICAL') AND $__timeFilter(timestamp) AND (empty('${run_id:raw}') OR run_id = '${run_id:raw}') AND (empty('${request_id:raw}') OR request_id = '${request_id:raw}') AND (empty('${job_id:raw}') OR job_id = '${job_id:raw}')"
+        }
+      ],
+      "title": "Errors",
+      "type": "stat",
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "route-agent-clickhouse"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 8,
+        "y": 0
+      },
+      "id": 3,
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "route-agent-clickhouse"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "queryType": "table",
+          "rawSql": "SELECT count() FROM route_agent_observability.logs WHERE event = 'job_failed' AND $__timeFilter(timestamp) AND (empty('${run_id:raw}') OR run_id = '${run_id:raw}') AND (empty('${request_id:raw}') OR request_id = '${request_id:raw}') AND (empty('${job_id:raw}') OR job_id = '${job_id:raw}')"
+        }
+      ],
+      "title": "Failed jobs",
+      "type": "stat",
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "route-agent-clickhouse"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 12,
+        "y": 0
+      },
+      "id": 4,
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "route-agent-clickhouse"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "queryType": "table",
+          "rawSql": "SELECT avg(duration_ms) FROM route_agent_observability.logs WHERE event = 'pipeline_complete' AND $__timeFilter(timestamp) AND (empty('${run_id:raw}') OR run_id = '${run_id:raw}') AND (empty('${request_id:raw}') OR request_id = '${request_id:raw}') AND (empty('${job_id:raw}') OR job_id = '${job_id:raw}')"
+        }
+      ],
+      "title": "Avg pipeline",
+      "type": "stat",
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "route-agent-clickhouse"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "decimals": 4
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 16,
+        "y": 0
+      },
+      "id": 5,
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "route-agent-clickhouse"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "queryType": "table",
+          "rawSql": "SELECT sum(JSONExtractFloat(extra, 'cost_usd')) FROM route_agent_observability.logs WHERE $__timeFilter(timestamp) AND (empty('${run_id:raw}') OR run_id = '${run_id:raw}') AND (empty('${request_id:raw}') OR request_id = '${request_id:raw}') AND (empty('${job_id:raw}') OR job_id = '${job_id:raw}')"
+        }
+      ],
+      "title": "LLM cost",
+      "type": "stat",
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "route-agent-clickhouse"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 20,
+        "y": 0
+      },
+      "id": 6,
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "route-agent-clickhouse"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "queryType": "table",
+          "rawSql": "SELECT sum(JSONExtractInt(extra, 'prompt_tokens') + JSONExtractInt(extra, 'completion_tokens')) FROM route_agent_observability.logs WHERE event = 'llm_generation' AND $__timeFilter(timestamp) AND (empty('${run_id:raw}') OR run_id = '${run_id:raw}') AND (empty('${request_id:raw}') OR request_id = '${request_id:raw}') AND (empty('${job_id:raw}') OR job_id = '${job_id:raw}')"
+        }
+      ],
+      "title": "LLM tokens",
+      "type": "stat",
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      }
+    },
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "route-agent-clickhouse"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "lineWidth": 2
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 4
+      },
+      "id": 7,
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "route-agent-clickhouse"
+          },
+          "editorType": "sql",
+          "format": 0,
+          "queryType": "timeseries",
+          "rawSql": "SELECT toStartOfMinute(timestamp) AS time, count() AS logs FROM route_agent_observability.logs WHERE $__timeFilter(timestamp) AND (empty('${run_id:raw}') OR run_id = '${run_id:raw}') AND (empty('${request_id:raw}') OR request_id = '${request_id:raw}') AND (empty('${job_id:raw}') OR job_id = '${job_id:raw}') GROUP BY time ORDER BY time"
+        }
+      ],
+      "title": "Log volume",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "route-agent-clickhouse"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "red"
+          },
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 60
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 4
+      },
+      "id": 8,
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "route-agent-clickhouse"
+          },
+          "editorType": "sql",
+          "format": 0,
+          "queryType": "timeseries",
+          "rawSql": "SELECT toStartOfMinute(timestamp) AS time, count() AS errors FROM route_agent_observability.logs WHERE level IN ('ERROR','CRITICAL') AND $__timeFilter(timestamp) AND (empty('${run_id:raw}') OR run_id = '${run_id:raw}') AND (empty('${request_id:raw}') OR request_id = '${request_id:raw}') AND (empty('${job_id:raw}') OR job_id = '${job_id:raw}') GROUP BY time ORDER BY time"
+        }
+      ],
+      "title": "Errors over time",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "grafana-clickhouse-datasource",
+        "uid": "route-agent-clickhouse"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 12
+      },
+      "id": 9,
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-clickhouse-datasource",
+            "uid": "route-agent-clickhouse"
+          },
+          "editorType": "sql",
+          "format": 1,
+          "queryType": "table",
+          "rawSql": "SELECT\n  run_id,\n  any(request_id) AS request_id,\n  any(job_id) AS job_id,\n  any(source) AS source,\n  any(command) AS command,\n  min(timestamp) AS started_at,\n  max(timestamp) AS finished_at,\n  count() AS logs,\n  countIf(level IN ('ERROR','CRITICAL')) AS errors,\n  maxIf(duration_ms, event = 'pipeline_complete') AS pipeline_ms,\n  anyLastIf(status, event = 'pipeline_complete') AS verdict\nFROM route_agent_observability.logs\nWHERE run_id IS NOT NULL AND $__timeFilter(timestamp) AND (empty('${run_id:raw}') OR run_id = '${run_id:raw}') AND (empty('${request_id:raw}') OR request_id = '${request_id:raw}') AND (empty('${job_id:raw}') OR job_id = '${job_id:raw}')\nGROUP BY run_id\nORDER BY started_at DESC\nLIMIT 50"
+        }
+      ],
+      "title": "Recent runs",
+      "type": "table"
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 39,
+  "tags": [
+    "route-agent",
+    "overview"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "",
+          "value": ""
+        },
+        "label": "run_id",
+        "name": "run_id",
+        "options": [],
+        "query": "",
+        "skipUrlSync": false,
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "",
+          "value": ""
+        },
+        "label": "request_id",
+        "name": "request_id",
+        "options": [],
+        "query": "",
+        "skipUrlSync": false,
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "",
+          "value": ""
+        },
+        "label": "job_id",
+        "name": "job_id",
+        "options": [],
+        "query": "",
+        "skipUrlSync": false,
+        "type": "textbox"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "title": "Route Agent / Overview",
+  "uid": "route-agent-observability",
+  "version": 1
+}

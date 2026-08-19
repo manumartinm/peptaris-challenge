@@ -1,0 +1,21 @@
+---
+description: Pydantic v2, type hints, ruff and mypy strict
+globs: "**/*.py"
+alwaysApply: false
+---
+
+# Python style
+
+- Type every public function and method. Keep mypy strict; do not add `type: ignore` to silence real errors.
+- Model request/response with Pydantic v2. Match `data/schema.json` (`additionalProperties` is false — no extra fields).
+- Run `ruff check` and `ruff format` on touched files. Prefer `X | None` over `Optional[X]`.
+
+```python
+# ❌ BAD
+def parse(data):
+    return data["sequence"]
+
+# ✅ GOOD
+def parse(data: DesignRequest) -> GoalSpec:
+    return GoalSpec(request_id=data.request_id, parent_backbone=data.sequence)
+```
