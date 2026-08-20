@@ -70,6 +70,18 @@ def mark_complete(state: JobState, phase: JobPhase) -> None:
 
 
 def activity_label(event: PipelineEvent) -> str | None:
+    if (
+        event.kind == "protecting_groups_prepared"
+        and event.diff is not None
+        and event.diff.protecting_groups
+    ):
+        shown = ", ".join(
+            f"{key}={value}"
+            for key, value in sorted(event.diff.protecting_groups.items())
+        )
+        process = event.process or "candidate"
+        site = f" @{event.site}" if event.site else ""
+        return f"{process}{site} · protecting {shown}"
     bits = [item for item in (event.process, event.site, event.node_id) if item]
     if bits:
         return " · ".join(bits)

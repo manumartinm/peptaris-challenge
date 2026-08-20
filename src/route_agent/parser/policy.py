@@ -85,12 +85,8 @@ class ProtectingGroupCensus:
         self._errors = errors or ErrorFactory()
         self._chemistry = chemistry or DEFAULT_CHEMISTRY
 
-    def census_protecting_groups(
-        self,
-        request: DesignRequest,
-        residues: Sequence[Residue],
-        sites: Sequence[ResolvedSite],
-    ) -> ProtectionResult:
+    def census_base(self, residues: Sequence[Residue]) -> ProtectionResult:
+        """Rebuild default Fmoc/tBu occupancy from residues, not a prior map."""
         protected: dict[str, str] = {}
         errors = []
         for residue in residues:
@@ -110,7 +106,31 @@ class ProtectingGroupCensus:
             group = self._chemistry.default_side_chain.get(residue.letter)
             if group is not None:
                 protected[residue.token] = group
+        return ProtectionResult(
+            ledger=ProtectionLedger(
+                protected=protected,
+                policy_version=self._chemistry.policy_version,
+                provenance=(
+                    Provenance(
+                        kind="inference",
+                        basis=(
+                            "Hard-coded Fmoc/tBu side-chain census "
+                            f"{self._chemistry.policy_version}."
+                        ),
+                    ),
+                ),
+            ),
+            errors=tuple(errors),
+        )
 
+    def census_protecting_groups(
+        self,
+        request: DesignRequest,
+        residues: Sequence[Residue],
+        sites: Sequence[ResolvedSite],
+    ) -> ProtectionResult:
+        base = self.census_base(residues)
+        protected = dict(base.ledger.protected)
         by_ref = sites_by_modification_ref(sites)
         for index, modification in enumerate(request.modifications):
             if modification.family not in self._chemistry.branching_families:
@@ -137,7 +157,7 @@ class ProtectingGroupCensus:
                     ),
                 ),
             ),
-            errors=tuple(errors),
+            errors=base.errors,
         )
 
 

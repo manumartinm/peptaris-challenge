@@ -344,7 +344,8 @@ def apply_candidate_to_state(
     process: str,
     detail: str | None,
 ) -> dict[str, Any]:
-    return (
+    original_n = str((output.get("termini") or {}).get("n") or "")
+    child = (
         ProductState.from_dict(output)
         .apply_candidate_to_state(
             family=family,
@@ -354,6 +355,12 @@ def apply_candidate_to_state(
         )
         .to_dict()
     )
+    child_n = str((child.get("termini") or {}).get("n") or "")
+    if original_n.lower() == "fmoc" and child_n == "free":
+        termini = dict(child.get("termini") or {})
+        termini["n"] = original_n
+        child["termini"] = termini
+    return child
 
 
 def build_recipe(
@@ -377,9 +384,10 @@ def _c_terminus_from_parent(parent_c_terminus: str) -> TerminusKind:
 
 
 def _as_terminus(value: object, *, default: TerminusKind) -> TerminusKind:
-    text = str(value or default)
+    text = str(value or default).strip().lower()
     mapping: dict[str, TerminusKind] = {
         "free": "free",
+        "fmoc": "free",
         "acetyl": "acetyl",
         "amide": "amide",
         "acid": "acid",

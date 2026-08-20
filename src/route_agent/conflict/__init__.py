@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
-from route_agent.conflict.handles import resolve_pending_handles
+from route_agent.conflict.handles import (
+    recompute_candidate_protection,
+    resolve_pending_handles,
+)
 from route_agent.conflict.ledger import Ledger
 from route_agent.conflict.walker import ConflictWalker, StageOutcome
 
@@ -13,5 +16,6 @@ __all__ = [
     "Ledger",
     "StageOutcome",
     "_resolve_pending_handles",
+    "recompute_candidate_protection",
     "resolve_pending_handles",
 ]

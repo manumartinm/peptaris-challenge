@@ -15,10 +15,12 @@ import type {
   PostGraphValidationReport,
   ProcessTrace,
   Provenance,
+  PipelineEvent,
   RouteConflict,
   RouteStep,
   RouteVerdict,
   SiteMapEntry,
+  StateDiff,
   StateLedger,
   ToolCall,
   TraceState,
@@ -352,6 +354,43 @@ function normalizeVerdict(value: unknown, requestId: string): RouteVerdict {
   };
 }
 
+function normalizeStateDiff(value: unknown): StateDiff | null {
+  if (!isRecord(value)) return null;
+  return {
+    protecting_groups: asStringMap(value.protecting_groups),
+    termini: asStringMap(value.termini),
+    connectivity_added: asObjectArray(value.connectivity_added).map((item) =>
+      Object.fromEntries(
+        Object.entries(item).map(([key, entry]) => [key, String(entry)]),
+      ),
+    ),
+    fragments: asStringArray(value.fragments),
+    overrides: asStringMap(value.overrides),
+    unknowns: asStringArray(value.unknowns),
+    route_step: isRecord(value.route_step) ? value.route_step : null,
+  };
+}
+
+function normalizeEvent(value: unknown): PipelineEvent {
+  const record = asRecord(value);
+  return {
+    kind: asString(record.kind, "unknown"),
+    stage: asString(record.stage, "unknown"),
+    request_id: asStringOrNull(record.request_id),
+    node_id: asStringOrNull(record.node_id),
+    parent_id: asStringOrNull(record.parent_id),
+    family: asStringOrNull(record.family),
+    process: asStringOrNull(record.process),
+    site: asStringOrNull(record.site),
+    status: asStringOrNull(record.status),
+    reason: asStringOrNull(record.reason),
+    kept: typeof record.kept === "boolean" ? record.kept : null,
+    frontier: asStringArray(record.frontier),
+    diff: normalizeStateDiff(record.diff),
+    message: asStringOrNull(record.message),
+  };
+}
+
 export function normalizeTrace(raw: Record<string, unknown>): PipelineTrace {
   const requestId = asString(raw.request_id, "unknown");
   return {
@@ -364,5 +403,6 @@ export function normalizeTrace(raw: Record<string, unknown>): PipelineTrace {
     verdict: normalizeVerdict(raw.verdict, requestId),
     cost: normalizeCost(raw.cost),
     llm_calls: asObjectArray(raw.llm_calls).map(normalizeLLMCall),
+    events: asObjectArray(raw.events).map(normalizeEvent),
   };
 }

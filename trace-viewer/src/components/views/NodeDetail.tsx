@@ -1,5 +1,15 @@
 import { formatTokens, formatUsd, humanize } from "../../lib/format";
-import type { ConflictNodeReport, JsonObject, StateLedger } from "../../types/trace";
+import {
+  candidateProtectionEvents,
+  changedProtectingGroups,
+  handleForSite,
+} from "../../lib/explain";
+import type {
+  ConflictNodeReport,
+  JsonObject,
+  PipelineEvent,
+  StateLedger,
+} from "../../types/trace";
 import { EmptyValue, StatusChip } from "../ui";
 
 function MapBlock({ title, value }: { title: string; value?: Record<string, string> }) {
@@ -32,9 +42,13 @@ function JsonLines({ value }: { value: unknown }) {
 export function NodeDetail({
   node,
   selectedId,
+  parent,
+  events,
 }: {
   node: ConflictNodeReport | null;
   selectedId: string | null;
+  parent?: ConflictNodeReport | null;
+  events?: PipelineEvent[];
 }) {
   if (!node) {
     return (
@@ -47,6 +61,9 @@ export function NodeDetail({
   const ledger: StateLedger = node.state.output;
   const history = ledger.history ?? [];
   const chosen = selectedId === node.id;
+  const changed = changedProtectingGroups(parent?.state.output, ledger);
+  const prepared = candidateProtectionEvents(events ?? [], node);
+  const siteHandle = handleForSite(ledger, node.candidate?.site);
 
   return (
     <aside className="node-detail">
@@ -64,6 +81,7 @@ export function NodeDetail({
         {node.candidate ? (
           <p>
             {node.candidate.process} · {humanize(node.candidate.family)} at {node.candidate.site}
+            {siteHandle ? ` · ${siteHandle}` : ""}
           </p>
         ) : (
           <EmptyValue />
@@ -95,7 +113,7 @@ export function NodeDetail({
       </section>
 
       <section>
-        <h4>Process history</h4>
+        <h4>Prior operations</h4>
         {history.length === 0 ? (
           <EmptyValue />
         ) : (
@@ -108,8 +126,14 @@ export function NodeDetail({
             ))}
           </ul>
         )}
+        {prepared.map((event, index) => (
+          <p key={`${event.process}-${index}`} className="muted">
+            {event.message || "Protecting groups recomputed from census, prior work, and this process."}
+          </p>
+        ))}
       </section>
 
+      <MapBlock title="Protecting groups changed" value={changed} />
       <MapBlock title="Protecting groups" value={ledger.protected} />
       <MapBlock title="Termini" value={ledger.termini} />
       <MapBlock title="Catalysts used" value={ledger.catalysts_used} />

@@ -143,6 +143,7 @@ def format_event_line(event: PipelineEvent) -> str:
         "stage_started",
         "stage_finished",
         "verdict_ready",
+        "protecting_groups_prepared",
     }:
         parts.append(event.message)
     return " ".join(parts)

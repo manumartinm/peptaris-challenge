@@ -15,6 +15,7 @@ from route_agent.observability import (
     new_run_id,
 )
 from route_agent.version import package_version
+from route_agent_api.cors import cors_origin_regex, cors_origins
 from route_agent_api.jobs import JobStore
 from route_agent_api.logging import configure_api_logging
 from route_agent_api.routes import health, jobs
@@ -73,7 +74,8 @@ def create_app(*, store: JobStore | None = None) -> FastAPI:
     app.middleware("http")(observability_middleware)
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["http://127.0.0.1:5173", "http://localhost:5173"],
+        allow_origins=cors_origins(),
+        allow_origin_regex=cors_origin_regex(),
         allow_methods=["*"],
         allow_headers=["*"],
     )

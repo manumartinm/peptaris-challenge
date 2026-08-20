@@ -69,7 +69,7 @@ API or copied to the server.
 | --- | --- |
 | **Home** | Request, final verdict, confidence, selected candidate, route, conflicts, unknowns, and cost summary |
 | **Validate** | `State_0`, sequence resolution, site mapping, family bindings, protection/resin decisions, and validation errors |
-| **Walk** | Conflict-tree topology, frontier changes, candidates, state diffs, findings, and process provenance |
+| **Walk** | Conflict-tree topology, frontier changes, candidates, recomputed protecting groups, state diffs, findings, and process provenance |
 | **Molecular** | Product recipe, 2D validity, formula, descriptors, fragments, optional 3D structure, and molecular unknowns |
 | **Intent** | Intent checks for surviving candidates and their evidence |
 | **Judge** | Winning route judgment, citations, confidence, findings, and remaining gaps |

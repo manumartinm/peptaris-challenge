@@ -20,6 +20,7 @@ EventKind = Literal[
     "stage_started",
     "stage_finished",
     "validation_stage",
+    "protecting_groups_prepared",
     "node_created",
     "candidate_evaluated",
     "branch_pruned",

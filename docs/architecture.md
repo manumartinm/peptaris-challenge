@@ -118,10 +118,13 @@ For each requested modification:
 
 1. the corpus provides one or more candidate process IDs;
 2. every current frontier node is paired with each candidate;
-3. `check_compatibility` evaluates the candidate against the current ledger;
-4. passing children update product state and remain on the frontier;
-5. chemical failures are pruned;
-6. degraded scientific uncertainty may remain, while infrastructure failures
+3. protecting groups are rebuilt from the residue census, `prior.history`,
+   and the candidate process, then `check_compatibility` evaluates that
+   candidate state;
+4. a deterministic protection error fails the node without an agent call;
+5. passing children keep the evaluated occupancy and remain on the frontier;
+6. chemical failures are pruned;
+7. degraded scientific uncertainty may remain, while infrastructure failures
    and timeouts are recorded as unknown and removed from the frontier.
 
 Sibling checks run sequentially. Each live compatibility call executes with a

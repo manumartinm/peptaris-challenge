@@ -81,3 +81,25 @@ class TestExplain(ValidationCase):
                 kind="branch_pruned", stage="walking", node_id="state_2", status="fail"
             )
         ).startswith("[walking]")
+
+    def test_protecting_groups_prepared_includes_diff(self) -> None:
+        line = format_event_line(
+            PipelineEvent(
+                kind="protecting_groups_prepared",
+                stage="walking",
+                parent_id="state_0",
+                process="alloc_lipidation",
+                site="K12",
+                diff=diff_state(
+                    {"protected": {"K12": "Boc"}},
+                    {"protected": {"K12": "Alloc"}},
+                ),
+                message=(
+                    "recomputed protecting groups from census, prior work, "
+                    "and the candidate process"
+                ),
+            )
+        )
+        assert "protecting_groups_prepared" in line
+        assert "alloc_lipidation" in line
+        assert "protecting K12=Alloc" in line

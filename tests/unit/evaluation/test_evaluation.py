@@ -182,6 +182,7 @@ class TestDevEvaluator(ValidationCase):
         assert "T-FAIL" in markdown
         assert "scramble" in markdown.lower()
         assert summary.cases == 2
+        assert summary.score is not None
         assert summary.score["points"] == 2
         assert not any(item.startswith("T-") for item in summary.key_problems)
 
@@ -213,3 +214,42 @@ class TestDevEvaluator(ValidationCase):
                 report_path=tmp_path / "EVAL_REPORT.md",
                 trace_dir=tmp_path / "traces",
             )
+
+    def test_launches_without_expected_and_skips_score(self, tmp_path: Path) -> None:
+        requests, _expected = write_eval_pair(
+            tmp_path,
+            [
+                self.payload(request_id="T-A", sequence="ACDE"),
+                self.payload(request_id="T-B", sequence="ACDE"),
+            ],
+            [],
+        )
+        actual = tmp_path / "actual.jsonl"
+        report = tmp_path / "EVAL_REPORT.md"
+        traces = tmp_path / "traces"
+        pipeline = ScriptedPipeline()
+        summary = DevEvaluator(
+            pipeline,
+            score_py=tmp_path / "missing-score.py",
+            schema_json=tmp_path / "missing-schema.json",
+        ).run(
+            requests_path=requests,
+            expected_path=None,
+            actual_path=actual,
+            report_path=report,
+            trace_dir=traces,
+        )
+        assert pipeline.ids == ["T-A", "T-B"]
+        lines = [
+            line
+            for line in actual.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+        assert len(lines) == 2
+        assert (traces / "T-A.trace.json").is_file()
+        assert (traces / "T-B.trace.json").is_file()
+        assert not report.exists()
+        assert summary.cases == 2
+        assert summary.score is None
+        assert summary.schema == {}
+        assert summary.key_problems == ()

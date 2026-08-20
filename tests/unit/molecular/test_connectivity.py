@@ -134,6 +134,23 @@ class TestCandidateCommit:
             item["catalog_id"] == "acetyl" for item in child["product_fragments"]
         )
 
+    def test_side_chain_family_keeps_on_resin_fmoc(self) -> None:
+        parent = build_parent_product_state(
+            sequence="SVSEIQLMHNLGKHLNSMERVEWLRKKLQDVHNF",
+            annotations={},
+            parent_c_terminus="free_acid",
+            parent_features=(),
+        )
+        parent["termini"] = {"n": "Fmoc", "c": parent["termini"]["c"]}
+        child = apply_candidate_to_state(
+            parent,
+            family="lipidation",
+            site="K13",
+            process="alloc_lipidation",
+            detail="C16 via gGlu",
+        )
+        assert child["termini"]["n"] == "Fmoc"
+
     def test_stapling_overrides_residues(self) -> None:
         parent = build_parent_product_state(
             sequence="SVSEIQLMHNLGKHLNSMERVEWLRKKLQDVHNF",

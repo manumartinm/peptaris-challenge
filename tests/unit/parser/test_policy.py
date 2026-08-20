@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import pytest
 
+from route_agent.parser.policy import ProtectingGroupCensus
+from route_agent.parser.sequence import SequenceValidator
 from tests.support.validation_case import (
     GLUCAGON,
     OCTREOTIDE,
@@ -99,6 +101,44 @@ class TestProtectingGroupCensus(ValidationCase):
 
         assert result.ledger.protected["K3"] == "pending"
         assert "K11" not in result.ledger.protected
+
+    def test_census_base_assigns_defaults_without_pending_targets(self) -> None:
+        residues = SequenceValidator().validate_parent_sequence("CRKDY", {}).residues
+        result = ProtectingGroupCensus().census_base(residues)
+
+        assert result.ledger.protected == {
+            "C1": "Trt",
+            "R2": "Pbf",
+            "K3": "Boc",
+            "D4": "OtBu",
+            "Y5": "tBu",
+        }
+        assert "pending" not in result.ledger.protected.values()
+        assert result.errors == ()
+
+    def test_census_rebuilds_from_residues_not_a_mutated_map(self) -> None:
+        residues = (
+            SequenceValidator().validate_parent_sequence(TERIPARATIDE, {}).residues
+        )
+        census = ProtectingGroupCensus()
+        first = census.census_base(residues)
+        first.ledger.protected["K13"] = "Alloc"
+
+        rebuilt = census.census_base(residues)
+
+        assert rebuilt.ledger.protected["K13"] == "Boc"
+        assert rebuilt.ledger.protected is not first.ledger.protected
+
+    def test_census_base_reports_unknown_residue(self) -> None:
+        residues = (
+            SequenceValidator()
+            .validate_parent_sequence(OCTREOTIDE, {"X8": "threoninol (Thr-ol)"})
+            .residues
+        )
+        result = ProtectingGroupCensus().census_base(residues)
+
+        assert "X8" not in result.ledger.protected
+        assert result.errors[0].code == "PROTECTING_GROUP_UNKNOWN"
 
 
 class TestResinSelector(ValidationCase):

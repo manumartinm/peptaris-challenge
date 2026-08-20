@@ -15,20 +15,25 @@ export function SequenceTape({ trace }: { trace: PipelineTrace }) {
       .map(siteIndex)
       .filter((index): index is number => index !== null),
   );
+  const selected = trace.tree.nodes.find((node) => node.id === trace.post_graph.selected_id);
+  const protectedGroups = selected?.state.output.protected ?? trace.validation.state.output.protected ?? {};
 
   return (
     <ol className="sequence-tape" aria-label="Resolved peptide sequence">
       {sequence.split("").map((letter, index) => {
         const position = index + 1;
+        const token = `${letter}${position}`;
+        const group = protectedGroups[token];
         const markedResidue = marked.has(position);
         return (
           <li
             key={`${letter}${position}`}
             className={markedResidue ? "residue marked" : "residue"}
-            title={`${letter}${position}`}
+            title={group ? `${token} · ${group}` : token}
           >
             <span className="residue-index">{position}</span>
             <span className="residue-letter">{letter}</span>
+            {group && markedResidue ? <span className="residue-pg">{group}</span> : null}
           </li>
         );
       })}

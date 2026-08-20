@@ -193,9 +193,9 @@ def post_graph_command(
 @click.argument("requests_path", type=click.Path(path_type=Path))
 @click.option(
     "--expected",
-    required=True,
     type=click.Path(path_type=Path),
-    help="Official expected key JSONL.",
+    default=None,
+    help="Official expected key JSONL. Omit to launch only, without scoring.",
 )
 @click.option(
     "--output",
@@ -225,7 +225,7 @@ def post_graph_command(
 def eval_command(
     ctx: click.Context,
     requests_path: Path,
-    expected: Path,
+    expected: Path | None,
     output: Path,
     report: Path,
     trace_dir: Path,
@@ -237,7 +237,7 @@ def eval_command(
     quiet: bool,
     log_format: LogFormat | None,
 ) -> None:
-    """Run the pipeline on a JSONL set and score with the official scorer."""
+    """Run a JSONL set. Scores with the official scorer when --expected is set."""
     apply_globals(ctx, verbose=verbose, quiet=quiet, log_format=log_format)
     with cli_command("debug eval"):
         _run_eval(
@@ -417,7 +417,7 @@ def _run_eval(
     ctx: click.Context,
     requests_path: Path,
     *,
-    expected: Path,
+    expected: Path | None,
     output: Path,
     report: Path,
     trace_dir: Path,
@@ -432,7 +432,7 @@ def _run_eval(
         if not requests_path.is_file():
             logger.error("requests file not found", path=str(requests_path))
             exit_input()
-        if not expected.is_file():
+        if expected is not None and not expected.is_file():
             logger.error("expected file not found", path=str(expected))
             exit_input()
         settings = settings_from_cli(

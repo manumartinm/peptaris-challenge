@@ -3,7 +3,7 @@ from __future__ import annotations
 import threading
 
 from route_agent.models.agent import AgentResult, CostReport
-from route_agent.models.events import PipelineEvent
+from route_agent.models.events import PipelineEvent, diff_state
 from route_agent.models.trace import PipelineTrace
 from route_agent.models.verdict import RouteVerdict
 from route_agent.pipeline import RunResult
@@ -140,5 +140,22 @@ class TestJobPhases(ValidationCase):
         assert state.progress.current == 1
         assert state.progress.total == 3
         assert state.activity == "alloc_lipidation · K5"
+
+        store.apply_event(
+            job.job_id,
+            PipelineEvent(
+                kind="protecting_groups_prepared",
+                stage="walking",
+                request_id="T-PHASE",
+                process="alloc_lipidation",
+                site="K5",
+                diff=diff_state(
+                    {"protected": {"K5": "Boc"}},
+                    {"protected": {"K5": "Alloc"}},
+                ),
+            ),
+        )
+        state = store.get(job.job_id)
+        assert state.activity == "alloc_lipidation @K5 · protecting K5=Alloc"
 
         release.set()

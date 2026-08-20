@@ -24,7 +24,12 @@ class Ledger:
         seeded.setdefault("protected", {})
         seeded.setdefault("free_amines", {})
         seeded.setdefault("catalysts_used", {})
-        seeded.setdefault("termini", {"c": parent_c_terminus, "n": "free"})
+        termini = dict(seeded.get("termini") or {})
+        n_term = str(termini.get("n") or "")
+        if n_term.lower() in {"", "free"}:
+            termini["n"] = "Fmoc"
+        termini.setdefault("c", parent_c_terminus)
+        seeded["termini"] = termini
         seeded.setdefault("history", [])
         seeded.setdefault("permanent_connectivity", [])
         seeded.setdefault("product_fragments", [])

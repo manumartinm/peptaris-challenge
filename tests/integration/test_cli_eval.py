@@ -83,3 +83,34 @@ class TestCliEval(CliCase):
             "--strict",
         )
         assert result.exit_code == 2, result.stdout + result.stderr
+
+    def test_eval_without_expected_launches_without_scoring(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("ROUTE_AGENT_MOLECULAR_SKIP_3D", "true")
+        requests, _expected = write_eval_pair(
+            tmp_path,
+            [self.amide_acetylation_payload("T-LAUNCH")],
+            [],
+        )
+        actual = tmp_path / "actual.jsonl"
+        report = tmp_path / "EVAL_REPORT.md"
+        traces = tmp_path / "traces"
+        result = self.invoke(
+            "eval",
+            str(requests),
+            "--output",
+            str(actual),
+            "--report",
+            str(report),
+            "--trace-dir",
+            str(traces),
+            "--no-model",
+        )
+        assert result.exit_code == 0, result.stdout + result.stderr
+        rows = load_jsonl(actual)
+        assert len(rows) == 1
+        assert rows[0]["request_id"] == "T-LAUNCH"
+        assert set(rows[0]) == PUBLIC_VERDICT_FIELDS
+        assert (traces / "T-LAUNCH.trace.json").is_file()
+        assert not report.exists()

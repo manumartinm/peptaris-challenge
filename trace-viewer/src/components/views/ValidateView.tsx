@@ -53,6 +53,10 @@ export function ValidateView({ trace }: { trace: PipelineTrace }) {
 
       <div className="split-grid">
         <Section title="Protecting groups">
+          <p className="muted">
+            State_0 census. The walk recomputes this map for each candidate from the
+            residue defaults, prior operations, and the process under test.
+          </p>
           {ledger.protected && Object.keys(ledger.protected).length > 0 ? (
             <ul className="kv-list">
               {Object.entries(ledger.protected).map(([site, group]) => (

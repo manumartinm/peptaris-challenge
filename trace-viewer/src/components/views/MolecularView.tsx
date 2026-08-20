@@ -2,13 +2,12 @@ import { formatMetric, humanize } from "../../lib/format";
 import { isRecord } from "../../lib/guards";
 import type {
   CandidateMolecularValidation,
-  CandidatePostGraphResult,
   JsonObject,
   PipelineTrace,
 } from "../../types/trace";
 import { MoleculeViewer } from "../MoleculeViewer";
 import { BulletList, EmptyValue, MetaGrid, Section, StatusChip } from "../ui";
-import { CandidateLabel, CostLine } from "./shared";
+import { CandidateLabel, CandidateNodeSelect, CostLine, useActiveCandidate } from "./shared";
 
 function MetricList({ value, omit }: { value: unknown; omit?: string[] }) {
   if (!isRecord(value)) return <EmptyValue />;
@@ -200,40 +199,27 @@ function MolecularCard({
   );
 }
 
-function CandidateMolecular({
-  item,
-  selectedId,
-  tiedIds,
-}: {
-  item: CandidatePostGraphResult;
-  selectedId: string | null;
-  tiedIds: string[];
-}) {
-  return (
-    <article className="candidate-card">
-      <CandidateLabel
-        nodeId={item.node_id}
-        candidate={item.candidate}
-        selected={item.node_id === selectedId}
-        tied={tiedIds.includes(item.node_id)}
-      />
-      {item.molecular ? (
-        <MolecularCard molecular={item.molecular} />
-      ) : (
-        <EmptyValue />
-      )}
-    </article>
-  );
-}
-
 export function MolecularView({ trace }: { trace: PipelineTrace }) {
   const report = trace.post_graph;
+  const { nodeId, setNodeId, item } = useActiveCandidate(report);
+
   return (
     <div className="view-stack">
-      <Section title="Post-graph molecular validation">
+      <Section
+        title="Post-graph molecular validation"
+        action={
+          <CandidateNodeSelect
+            candidates={report.candidates}
+            selectedId={report.selected_id}
+            tiedIds={report.tied_ids}
+            value={nodeId}
+            onChange={setNodeId}
+          />
+        }
+      >
         <MetaGrid
           items={[
-            { label: "Selected", value: report.selected_id },
+            { label: "Best", value: report.selected_id },
             { label: "Surviving", value: report.surviving_ids.join(", ") },
             { label: "Tied", value: report.tied_ids.join(", ") || null },
             { label: "Candidates", value: String(report.candidates.length) },
@@ -242,17 +228,18 @@ export function MolecularView({ trace }: { trace: PipelineTrace }) {
         <CostLine cost={trace.cost.phases.post_graph} />
         <BulletList items={report.unknowns} />
       </Section>
-      {report.candidates.length === 0 ? (
-        <EmptyValue />
-      ) : (
-        report.candidates.map((item) => (
-          <CandidateMolecular
-            key={item.node_id}
-            item={item}
-            selectedId={report.selected_id}
-            tiedIds={report.tied_ids}
+      {item ? (
+        <article className="candidate-card">
+          <CandidateLabel
+            nodeId={item.node_id}
+            candidate={item.candidate}
+            selected={item.node_id === report.selected_id}
+            tied={report.tied_ids.includes(item.node_id)}
           />
-        ))
+          {item.molecular ? <MolecularCard molecular={item.molecular} /> : <EmptyValue />}
+        </article>
+      ) : (
+        <EmptyValue />
       )}
     </div>
   );

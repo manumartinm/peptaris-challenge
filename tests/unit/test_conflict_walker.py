@@ -20,11 +20,19 @@ from route_agent.models.request import (
 )
 from route_agent.models.validation import StructuredFreeText
 from route_agent.observability import StructuredLogger
+from route_agent.observe import RecordingObserver
+from route_agent.parser.sequence import SequenceValidator
+from route_agent.parser.sites import SiteValidator
 from route_agent.verdict.assembler import RouteAssembler
 from tests.support.agents import ScriptedAgent, SleepingOnProcessAgent
 from tests.support.conflict_fixtures import post_graph_report
 from tests.support.fake_tracer import FakeTracer
-from tests.support.validation_case import GLUCAGON, TERIPARATIDE, ValidationCase
+from tests.support.validation_case import (
+    GLUCAGON,
+    OCTREOTIDE,
+    TERIPARATIDE,
+    ValidationCase,
+)
 
 
 class TestConflictWalker(ValidationCase):
@@ -77,28 +85,15 @@ class TestConflictWalker(ValidationCase):
         *,
         status: str = "pass",
     ) -> ValidationResult:
-        sites = tuple(
-            ResolvedSite(
-                modification_ref=index,
-                requested_token=modification.site,
-                atoms=(),
-            )
-            for index, modification in enumerate(request.modifications)
+        sequence = SequenceValidator().validate_parent_sequence(
+            request.sequence, request.residue_annotations
         )
-        site_map = tuple(
-            SiteMapEntry(
-                requested=modification.site,
-                resolved=modification.site,
-                residue=modification.site[:1],
-                note=None,
-            )
-            for modification in request.modifications
-        )
+        parsed = SiteValidator().validate_modification_sites(request, sequence.residues)
         return ValidationResult(
             request_id=request.request_id,
             state=self._state(status=status),
-            residues=(),
-            sites_resolved=sites,
+            residues=sequence.residues,
+            sites_resolved=parsed.sites_resolved,
             parent_c_terminus=request.parent_c_terminus,
             parent_features=request.parent_features,
             residue_annotations=dict(request.residue_annotations),
@@ -108,7 +103,7 @@ class TestConflictWalker(ValidationCase):
             resolved_sequence=request.sequence,
             resolved_annotations=dict(request.residue_annotations),
             index_map=(),
-            site_map=site_map,
+            site_map=parsed.site_map,
             conflicts=(),
             unknowns=(),
         )
@@ -117,6 +112,7 @@ class TestConflictWalker(ValidationCase):
         self,
         tmp_path: Path,
         outcomes: dict[str, bool | None] | None = None,
+        observer: RecordingObserver | None = None,
     ) -> tuple[ConflictWalker, ScriptedAgent, CompatCache]:
         sandbox = LiteratureSandbox(tmp_path / "research")
         agent = ScriptedAgent(outcomes)
@@ -129,7 +125,10 @@ class TestConflictWalker(ValidationCase):
             cache=cache,
         )
         walker = ConflictWalker(
-            runtime, CorpusRepository(self.families_path), check_timeout_s=0
+            runtime,
+            CorpusRepository(self.families_path),
+            check_timeout_s=0,
+            observer=observer or RecordingObserver(),
         )
         return walker, agent, cache
 
@@ -287,7 +286,7 @@ class TestConflictWalker(ValidationCase):
         assert child.state.route_step is not None
         assert tree.surviving_ids == ("state_1",)
         payload = agent.payloads[0]["state"]
-        assert payload["protected"]["K12"] == "pending"
+        assert payload["protected"]["K12"] == "Boc"
         assert payload["history"] == []
         assert payload["sequence_snapshot"] == GLUCAGON
         assert payload["route_step"]["resin"] == "Wang"
@@ -299,6 +298,7 @@ class TestConflictWalker(ValidationCase):
         prior = agent.payloads[0]["prior"]
         assert prior["resin"] == "Wang"
         assert prior["parent_c_terminus"] == "free_acid"
+        assert agent.payloads[0]["state"]["termini"]["n"] == "Fmoc"
         assert child.state.output["permanent_connectivity"][0]["to_fragment"] == (
             "acetyl:1"
         )
@@ -864,3 +864,247 @@ class TestConflictWalker(ValidationCase):
             for node in children
             if node.candidate and node.candidate.process == "ivdde_lipidation"
         )
+
+    def test_each_candidate_recomputes_protecting_groups_before_the_check(
+        self, tmp_path: Path
+    ) -> None:
+        request = self.request(
+            request_id="T-PG-WALK",
+            sequence=GLUCAGON,
+            modifications=[{"family": "lipidation", "site": "K12"}],
+        )
+        bindings = (
+            self._binding(
+                modification_ref=0,
+                family=ModificationFamily.LIPIDATION,
+                process_ids=(
+                    "mtt_lipidation",
+                    "ivdde_lipidation",
+                    "alloc_lipidation",
+                ),
+                sheet="06_Lipidation",
+            ),
+        )
+        observer = RecordingObserver()
+        walker, agent, _cache = self._walker(tmp_path, observer=observer)
+
+        tree = walker.walk(request, self._validation(request, bindings))
+        children = [tree.node(node_id) for node_id in tree.graph.successors("state_0")]
+        handles = {
+            payload["candidate"]["process"]: payload["state"]["protected"]["K12"]
+            for payload in agent.payloads
+        }
+
+        assert handles == {
+            "mtt_lipidation": "Mtt",
+            "ivdde_lipidation": "ivDde",
+            "alloc_lipidation": "Alloc",
+        }
+        assert {node.state.output["protected"]["K12"] for node in children} == {
+            "Mtt",
+            "ivDde",
+            "Alloc",
+        }
+        assert all(payload["prior"]["history"] == [] for payload in agent.payloads)
+        assert all(payload["prior"]["resin"] == "Wang" for payload in agent.payloads)
+        prepared = [
+            event
+            for event in observer.events
+            if event.kind == "protecting_groups_prepared"
+        ]
+        assert [event.process for event in prepared] == [
+            "mtt_lipidation",
+            "ivdde_lipidation",
+            "alloc_lipidation",
+        ]
+        assert prepared[0].diff is not None
+        assert prepared[0].diff.protecting_groups["K12"] == "Mtt"
+
+    def test_later_modification_sees_prior_operations_and_can_replace_handle(
+        self, tmp_path: Path
+    ) -> None:
+        request = self.request(
+            request_id="T-PG-REPLACE",
+            sequence=GLUCAGON,
+            modifications=[
+                {"family": "lipidation", "site": "K12"},
+                {"family": "pegylation", "site": "K12", "detail": "Fmoc-PEG8"},
+            ],
+        )
+        bindings = (
+            self._binding(
+                modification_ref=0,
+                family=ModificationFamily.LIPIDATION,
+                process_ids=("alloc_lipidation",),
+                sheet="06_Lipidation",
+            ),
+            self._binding(
+                modification_ref=1,
+                family=ModificationFamily.PEGYLATION,
+                process_ids=("mtt_pegylation",),
+            ),
+        )
+        walker, agent, _cache = self._walker(tmp_path)
+
+        tree = walker.walk(request, self._validation(request, bindings))
+        child = tree.node("state_1")
+        grandchild = tree.node(next(iter(tree.graph.successors("state_1"))))
+        second = agent.payloads[-1]
+
+        assert child.state.output["protected"]["K12"] == "Alloc"
+        assert grandchild.state.output["protected"]["K12"] == "Mtt"
+        assert second["prior"]["history"][0]["process"] == "alloc_lipidation"
+        assert second["state"]["protected"]["K12"] == "Mtt"
+        assert second["prior"]["sequence_snapshot"] == GLUCAGON
+
+    def test_future_branch_target_is_not_pending_during_earlier_stage(
+        self, tmp_path: Path
+    ) -> None:
+        request = self.request(
+            request_id="T-PG-FUTURE-WALK",
+            sequence=GLUCAGON,
+            modifications=[
+                {"family": "n_term_acetylation", "site": "N-term"},
+                {"family": "lipidation", "site": "K12"},
+            ],
+        )
+        bindings = (
+            self._binding(
+                modification_ref=0,
+                family=ModificationFamily.N_TERM_ACETYLATION,
+                process_ids=("n_term_acetylation_default",),
+            ),
+            self._binding(
+                modification_ref=1,
+                family=ModificationFamily.LIPIDATION,
+                process_ids=("alloc_lipidation",),
+            ),
+        )
+        walker, agent, _cache = self._walker(tmp_path)
+
+        walker.walk(request, self._validation(request, bindings))
+
+        first = agent.payloads[0]
+        second = agent.payloads[1]
+        assert first["state"]["protected"]["K12"] == "Boc"
+        assert second["state"]["protected"]["K12"] == "Alloc"
+        assert second["prior"]["history"][0]["process"] == "n_term_acetylation_default"
+
+    def test_unknown_residue_census_does_not_fail_the_node(
+        self, tmp_path: Path
+    ) -> None:
+        request = self.request(
+            request_id="T-PG-X",
+            parent_name="octreotide",
+            sequence=OCTREOTIDE,
+            parent_c_terminus="alcohol",
+            residue_annotations={"X8": "threoninol (Thr-ol)"},
+            modifications=[{"family": "pegylation", "site": "K5"}],
+        )
+        bindings = (
+            self._binding(
+                modification_ref=0,
+                family=ModificationFamily.PEGYLATION,
+                process_ids=("pegylation_on_resin",),
+            ),
+        )
+        walker, agent, _cache = self._walker(tmp_path)
+
+        tree = walker.walk(request, self._validation(request, bindings))
+        child = tree.node("state_1")
+
+        assert agent.payloads
+        assert child.state.status != "fail"
+        assert child.agent_result is not None
+        assert child.agent_result.passed is not False
+        assert child.agent_result.findings == ()
+        assert any(
+            "no standard side-chain protecting" in item
+            for item in child.agent_result.unknowns
+        )
+        assert tree.surviving_ids == ("state_1",)
+
+    def test_uncapped_n_terminus_is_fmoc_during_on_resin_check(
+        self, tmp_path: Path
+    ) -> None:
+        request = self.request(
+            request_id="T-N-FMOC",
+            sequence=GLUCAGON,
+            modifications=[{"family": "lipidation", "site": "K12"}],
+        )
+        bindings = (
+            self._binding(
+                modification_ref=0,
+                family=ModificationFamily.LIPIDATION,
+                process_ids=("alloc_lipidation",),
+                sheet="06_Lipidation",
+            ),
+        )
+        walker, agent, _cache = self._walker(tmp_path)
+
+        tree = walker.walk(request, self._validation(request, bindings))
+
+        assert agent.payloads[0]["state"]["termini"]["n"] == "Fmoc"
+        assert tree.node("state_1").state.output["termini"]["n"] == "Fmoc"
+
+    def test_parent_n_terminal_acetyl_is_not_reset_to_fmoc(
+        self, tmp_path: Path
+    ) -> None:
+        request = self.request(
+            request_id="T-N-AC",
+            sequence="SYSMEHFRWGKPV",
+            parent_c_terminus="amide",
+            parent_features=["N-terminal acetyl"],
+            modifications=[{"family": "lipidation", "site": "K11"}],
+        )
+        bindings = (
+            self._binding(
+                modification_ref=0,
+                family=ModificationFamily.LIPIDATION,
+                process_ids=("alloc_lipidation",),
+                sheet="06_Lipidation",
+            ),
+        )
+        walker, agent, _cache = self._walker(tmp_path)
+        validation = self._validation(request, bindings)
+        validation.state.output["termini"] = {"n": "acetyl", "c": "amide"}
+
+        walker.walk(request, validation)
+
+        assert agent.payloads[0]["state"]["termini"]["n"] == "acetyl"
+
+    def test_incompatible_candidate_is_pruned_with_recomputed_protecting_groups(
+        self, tmp_path: Path
+    ) -> None:
+        request = self.request(
+            request_id="T-PG-INCOMPAT",
+            sequence=GLUCAGON,
+            modifications=[{"family": "lipidation", "site": "K12"}],
+        )
+        bindings = (
+            self._binding(
+                modification_ref=0,
+                family=ModificationFamily.LIPIDATION,
+                process_ids=("alloc_lipidation", "mtt_lipidation"),
+                sheet="06_Lipidation",
+            ),
+        )
+        walker, agent, _cache = self._walker(
+            tmp_path, outcomes={"alloc_lipidation": False}
+        )
+
+        tree = walker.walk(request, self._validation(request, bindings))
+        children = [tree.node(node_id) for node_id in tree.graph.successors("state_0")]
+        by_process = {
+            node.candidate.process: node
+            for node in children
+            if node.candidate is not None
+        }
+
+        alloc = by_process["alloc_lipidation"]
+        mtt = by_process["mtt_lipidation"]
+        assert agent.payloads[0]["state"]["protected"]["K12"] == "Alloc"
+        assert alloc.state.status == "fail"
+        assert alloc.state.output["protected"]["K12"] == "Alloc"
+        assert mtt.state.status == "pass"
+        assert tree.surviving_ids == (mtt.state.id,)

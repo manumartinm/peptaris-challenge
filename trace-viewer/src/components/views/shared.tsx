@@ -1,8 +1,11 @@
+import { useEffect, useState } from "react";
 import { formatCount, formatTokens, formatUsd, humanize, shortRef } from "../../lib/format";
 import type {
   AgentCandidate,
   AgentResult,
+  CandidatePostGraphResult,
   CostBreakdown,
+  PostGraphValidationReport,
   Provenance,
 } from "../../types/trace";
 import { BulletList, EmptyValue, PassChip, Section } from "../ui";
@@ -38,9 +41,84 @@ export function CandidateLabel({
       ) : (
         <EmptyValue />
       )}
-      {selected ? <span className="chip chip-navy">selected</span> : null}
+      {selected ? <span className="chip chip-navy">best</span> : null}
       {tied ? <span className="chip chip-warn">tied</span> : null}
     </div>
+  );
+}
+
+function candidateOptionLabel(
+  item: CandidatePostGraphResult,
+  selectedId: string | null,
+  tiedIds: string[],
+): string {
+  const parts = [item.node_id];
+  if (item.candidate) {
+    parts.push(
+      `${item.candidate.process} · ${humanize(item.candidate.family)} at ${item.candidate.site}`,
+    );
+  }
+  if (item.node_id === selectedId) parts.push("best");
+  else if (tiedIds.includes(item.node_id)) parts.push("tied");
+  return parts.join(" · ");
+}
+
+function sortedCandidates(
+  candidates: CandidatePostGraphResult[],
+  selectedId: string | null,
+): CandidatePostGraphResult[] {
+  return [...candidates].sort((left, right) => {
+    if (left.node_id === selectedId) return -1;
+    if (right.node_id === selectedId) return 1;
+    return 0;
+  });
+}
+
+export function useActiveCandidate(report: PostGraphValidationReport) {
+  const fallbackId = report.selected_id ?? report.candidates[0]?.node_id ?? "";
+  const [nodeId, setNodeId] = useState(fallbackId);
+
+  useEffect(() => {
+    setNodeId(fallbackId);
+  }, [report.request_id, fallbackId]);
+
+  const item =
+    report.candidates.find((candidate) => candidate.node_id === nodeId) ??
+    report.candidates[0] ??
+    null;
+
+  return { nodeId: item?.node_id ?? "", setNodeId, item };
+}
+
+export function CandidateNodeSelect({
+  candidates,
+  selectedId,
+  tiedIds,
+  value,
+  onChange,
+}: {
+  candidates: CandidatePostGraphResult[];
+  selectedId: string | null;
+  tiedIds: string[];
+  value: string;
+  onChange: (nodeId: string) => void;
+}) {
+  if (candidates.length === 0) return null;
+  return (
+    <label className="node-select-label">
+      Node
+      <select
+        className="node-select"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+      >
+        {sortedCandidates(candidates, selectedId).map((item) => (
+          <option key={item.node_id} value={item.node_id}>
+            {candidateOptionLabel(item, selectedId, tiedIds)}
+          </option>
+        ))}
+      </select>
+    </label>
   );
 }
 

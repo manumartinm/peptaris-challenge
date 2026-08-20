@@ -9,7 +9,7 @@ export interface TreeNodeData extends Record<string, unknown> {
 
 export type TreeFlowNode = Node<TreeNodeData, "conflict">;
 
-const NODE_WIDTH = 236;
+const NODE_WIDTH = 264;
 const GAP_X = 36;
 const GAP_Y = 118;
 

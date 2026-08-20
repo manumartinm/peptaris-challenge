@@ -372,10 +372,24 @@ code,
 .panel-head {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
   margin-bottom: 12px;
   border-bottom: 1px solid var(--rule);
   padding-bottom: 8px;
+}
+
+.node-select-label {
+  display: grid;
+  gap: 4px;
+  min-width: min(100%, 280px);
+  max-width: 420px;
+  flex: 1;
+}
+
+.node-select {
+  width: 100%;
 }
 
 .panel-head h2,
@@ -496,6 +510,18 @@ code,
   padding: 4px 0 6px;
 }
 
+.residue-pg {
+  display: block;
+  font-size: 0.48rem;
+  letter-spacing: 0.02em;
+  color: var(--penn-blue);
+  line-height: 1.1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 1px;
+}
+
 .residue.marked {
   border-color: var(--penn-red);
   background: #f8ecec;
@@ -545,7 +571,7 @@ code,
 }
 
 .flow-node {
-  width: 220px;
+  width: 248px;
   background: #fff;
   border: 1px solid var(--rule);
   padding: 10px 12px;

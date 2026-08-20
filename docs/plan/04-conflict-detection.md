@@ -52,9 +52,16 @@ simple chain. Some have several:
 
 ## 3.3 Check compatibility
 
-One Agent invocation per candidate, objective `check_compatibility`:
+Before each Agent invocation the walker rebuilds `protected` from scratch:
+residue defaults, then every operation already in `prior.history`, then the
+candidate process. Future modifications are not marked pending yet. That map
+is the state `check_compatibility` sees, and it can fail the node on its own
+if the census has a deterministic error.
+
+One Agent invocation per remaining candidate, objective `check_compatibility`:
 
 ```
+Prior: {resin, sequence_snapshot, parent_c_terminus, history}
 State: {protected: {...}, free_amines: {...}, catalysts_used: {...},
         termini: {...}}
 Candidate: family=lipidation, site=K13, process=Alloc

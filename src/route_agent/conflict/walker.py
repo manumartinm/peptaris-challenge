@@ -19,9 +19,9 @@ from typing import Any
 import networkx as nx
 
 from route_agent.agent.failures import is_infrastructure_unknown
-from route_agent.agent.runtime import AgentRuntime
-from route_agent.conflict.handles import resolve_pending_handles
-from route_agent.conflict.ledger import Ledger
+from route_agent.agent.runtime import AgentRuntime, build_prior_payload
+from route_agent.conflict.handles import recompute_candidate_protection
+from route_agent.conflict.ledger import Ledger, deep_copy_value
 from route_agent.corpus import CorpusRepository
 from route_agent.llm.run_context import current_run
 from route_agent.models.agent import AgentCandidate, AgentResult
@@ -36,6 +36,7 @@ from route_agent.models.conflict import (
 from route_agent.models.corpus import FamilyBinding
 from route_agent.models.events import PipelineEvent, diff_state
 from route_agent.models.request import DesignRequest
+from route_agent.models.validation import ProtectionResult
 from route_agent.molecular.connectivity import apply_candidate_to_state
 from route_agent.observability import StructuredLogger
 from route_agent.observe import NoOpObserver, PipelineObserver
@@ -48,6 +49,7 @@ class StageOutcome:
     parent_id: str
     candidate: AgentCandidate
     result: AgentResult
+    output: dict[str, Any]
 
 
 class ConflictWalker:
@@ -128,7 +130,9 @@ class ConflictWalker:
                 candidates=len(candidates),
                 checks=len(jobs),
             )
-            outcomes = self._run_stage_checks(request, binding, outputs, jobs)
+            outcomes = self._run_stage_checks(
+                request, validation, binding, outputs, jobs
+            )
             next_frontier: list[str] = []
             for outcome in outcomes:
                 child_id, keep_on_frontier = self._attach_child_node(
@@ -190,13 +194,14 @@ class ConflictWalker:
     def _run_stage_checks(
         self,
         request: DesignRequest,
+        validation: ValidationResult,
         binding: FamilyBinding,
         outputs: dict[str, dict[str, Any]],
         jobs: list[tuple[str, AgentCandidate]],
     ) -> list[StageOutcome]:
         return [
             self._run_check_with_timeout(
-                request, binding, outputs, parent_id, candidate
+                request, validation, binding, outputs, parent_id, candidate
             )
             for parent_id, candidate in jobs
         ]
@@ -204,6 +209,7 @@ class ConflictWalker:
     def _run_check_with_timeout(
         self,
         request: DesignRequest,
+        validation: ValidationResult,
         binding: FamilyBinding,
         outputs: dict[str, dict[str, Any]],
         parent_id: str,
@@ -218,6 +224,28 @@ class ConflictWalker:
             process=candidate.process,
             modification_ref=binding.modification_ref,
         )
+        candidate_state, protection = self._prepare_candidate_state(
+            request, validation, outputs[parent_id], candidate
+        )
+        self._observer.on_event(
+            PipelineEvent(
+                kind="protecting_groups_prepared",
+                stage="walking",
+                request_id=request.request_id,
+                parent_id=parent_id,
+                family=candidate.family,
+                process=candidate.process,
+                site=candidate.site,
+                diff=diff_state(outputs[parent_id], candidate_state),
+                status="degraded" if protection.errors else None,
+                reason=(protection.errors[0].message if protection.errors else None),
+                message=(
+                    "recomputed protecting groups from census, prior work, "
+                    "and the candidate process"
+                ),
+            )
+        )
+        census_unknowns = tuple(error.message for error in protection.errors)
         timeout = None if self._check_timeout_s <= 0 else self._check_timeout_s
         trace_context = None
         run = current_run()
@@ -226,12 +254,12 @@ class ConflictWalker:
         try:
             if timeout is None:
                 result = self._invoke_compatibility_check(
-                    request, outputs, parent_id, candidate, None
+                    request, candidate_state, candidate, None
                 )
             else:
                 result = run_with_deadline(
                     self._invoke_compatibility_check,
-                    (request, outputs, parent_id, candidate, trace_context),
+                    (request, candidate_state, candidate, trace_context),
                     timeout_s=timeout,
                 )
         except DeadlineExceeded:
@@ -242,27 +270,26 @@ class ConflictWalker:
                 process=candidate.process,
                 timeout_s=self._check_timeout_s,
             )
-            return StageOutcome(
-                parent_id,
-                candidate,
-                AgentResult(
-                    objective="check_compatibility",
-                    passed=None,
-                    unknowns=("check_timeout",),
+            result = AgentResult(
+                objective="check_compatibility",
+                passed=None,
+                unknowns=("check_timeout", *census_unknowns),
+            )
+            return StageOutcome(parent_id, candidate, result, candidate_state)
+        except Exception as exc:  # noqa: BLE001
+            result = AgentResult(
+                objective="check_compatibility",
+                passed=None,
+                unknowns=(
+                    f"agent_invoke_failed:{type(exc).__name__}",
+                    str(exc),
+                    *census_unknowns,
                 ),
             )
-        except Exception as exc:  # noqa: BLE001
-            return StageOutcome(
-                parent_id,
-                candidate,
-                AgentResult(
-                    objective="check_compatibility",
-                    passed=None,
-                    unknowns=(
-                        f"agent_invoke_failed:{type(exc).__name__}",
-                        str(exc),
-                    ),
-                ),
+            return StageOutcome(parent_id, candidate, result, candidate_state)
+        if census_unknowns:
+            result = result.model_copy(
+                update={"unknowns": (*result.unknowns, *census_unknowns)}
             )
         self._logger.info(
             "walk_check_done",
@@ -272,23 +299,45 @@ class ConflictWalker:
             passed=result.passed,
             status=node_status_from_result(result),
         )
-        return StageOutcome(parent_id, candidate, result)
+        return StageOutcome(parent_id, candidate, result, candidate_state)
+
+    def _prepare_candidate_state(
+        self,
+        request: DesignRequest,
+        validation: ValidationResult,
+        parent_output: dict[str, Any],
+        candidate: AgentCandidate,
+    ) -> tuple[dict[str, Any], ProtectionResult]:
+        candidate_state = {
+            key: deep_copy_value(value) for key, value in parent_output.items()
+        }
+        prior = build_prior_payload(parent_output, request)
+        protection = recompute_candidate_protection(
+            residues=validation.residues,
+            sites=validation.sites_resolved,
+            request=request,
+            prior=prior,
+            candidate=candidate,
+        )
+        candidate_state["protected"] = dict(protection.ledger.protected)
+        return candidate_state, protection
 
     def _invoke_compatibility_check(
         self,
         request: DesignRequest,
-        outputs: dict[str, dict[str, Any]],
-        parent_id: str,
+        state_payload: dict[str, Any],
         candidate: AgentCandidate,
         trace_context: dict[str, str] | None = None,
     ) -> AgentResult:
         tracer = self._agent._tracer
+        profile = self._families.lookup_family_process(
+            candidate.family, candidate.process
+        )
         if trace_context and hasattr(tracer, "continue_span"):
             with tracer.continue_span(
                 "walk.worker",
                 {
                     "process": candidate.process,
-                    "parent_id": parent_id,
                     "request_id": request.request_id,
                 },
                 trace_context,
@@ -296,20 +345,16 @@ class ConflictWalker:
                 return self._agent.invoke(
                     "check_compatibility",
                     request,
-                    outputs[parent_id],
+                    state_payload,
                     candidate,
-                    process_profile=self._families.lookup_family_process(
-                        candidate.family, candidate.process
-                    ),
+                    process_profile=profile,
                 )
         return self._agent.invoke(
             "check_compatibility",
             request,
-            outputs[parent_id],
+            state_payload,
             candidate,
-            process_profile=self._families.lookup_family_process(
-                candidate.family, candidate.process
-            ),
+            process_profile=profile,
         )
 
     def _attach_child_node(
@@ -334,7 +379,7 @@ class ConflictWalker:
             modification_ref=binding.modification_ref,
             passed=outcome.result.passed,
         )
-        child_out = Ledger.build_child_ledger(parent_output, trace)
+        child_out = Ledger.build_child_ledger(outcome.output, trace)
         if keep_on_frontier:
             detail = None
             if 0 <= binding.modification_ref < len(request.modifications):
@@ -346,7 +391,6 @@ class ConflictWalker:
                 process=outcome.candidate.process,
                 detail=detail,
             )
-            child_out = resolve_pending_handles(child_out, outcome.candidate)
         profile = self._families.lookup_family_process(
             outcome.candidate.family, outcome.candidate.process
         )

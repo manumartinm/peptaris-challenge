@@ -22,6 +22,10 @@ export function TreeView({ trace }: { trace: PipelineTrace }) {
   );
   const [activeId, setActiveId] = useState<string | null>(selectedId);
   const active = trace.tree.nodes.find((node) => node.id === activeId) ?? null;
+  const parent =
+    active?.state.parents[0] != null
+      ? (trace.tree.nodes.find((node) => node.id === active.state.parents[0]) ?? null)
+      : null;
 
   const onNodeClick: NodeMouseHandler = (_event, node) => {
     setActiveId(node.id);
@@ -44,7 +48,12 @@ export function TreeView({ trace }: { trace: PipelineTrace }) {
           <MiniMap pannable zoomable />
         </ReactFlow>
       </div>
-      <NodeDetail node={active} selectedId={selectedId} />
+      <NodeDetail
+        node={active}
+        selectedId={selectedId}
+        parent={parent}
+        events={trace.events}
+      />
     </div>
   );
 }

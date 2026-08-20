@@ -22,7 +22,7 @@ class PipelineLike(Protocol):
 @dataclass(frozen=True)
 class EvalSummary:
     cases: int
-    score: dict[str, Any]
+    score: dict[str, Any] | None
     schema: dict[str, Any]
     actual_path: Path
     report_path: Path
@@ -46,17 +46,19 @@ class DevEvaluator:
         self,
         *,
         requests_path: Path,
-        expected_path: Path,
+        expected_path: Path | None,
         actual_path: Path,
         report_path: Path,
         trace_dir: Path,
     ) -> EvalSummary:
         requests = load_design_requests(requests_path)
-        key_check = self._validate_key(expected_path)
-        problems = tuple(key_check.get("problems") or ())
-        structural = _structural_key_problems(problems)
-        if structural:
-            raise ValueError("expected key is invalid: " + "; ".join(structural))
+        problems: tuple[str, ...] = ()
+        if expected_path is not None:
+            key_check = self._validate_key(expected_path)
+            problems = tuple(key_check.get("problems") or ())
+            structural = _structural_key_problems(problems)
+            if structural:
+                raise ValueError("expected key is invalid: " + "; ".join(structural))
         writer = TraceWriter(trace_dir)
         actuals: list[dict[str, Any]] = []
         costs: list[tuple[str, CostBreakdown]] = []
@@ -69,6 +71,20 @@ class DevEvaluator:
             actuals.append(result.verdict.model_dump(mode="json"))
             costs.append((request.request_id, result.cost.total))
         write_jsonl(actual_path, actuals)
+        if expected_path is None:
+            self._logger.info(
+                "eval_complete",
+                cases=len(requests),
+                scored=False,
+                actual=str(actual_path),
+            )
+            return EvalSummary(
+                cases=len(requests),
+                score=None,
+                schema={},
+                actual_path=actual_path,
+                report_path=report_path,
+            )
         schema = self._validate_schema(actual_path)
         score = self._score(expected_path, actual_path)
         report_path.write_text(

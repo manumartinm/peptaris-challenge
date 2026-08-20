@@ -80,6 +80,9 @@ class LoggingObserver:
             current=event.current,
             total=event.total,
             detail=event.message,
+            protecting_groups=(
+                dict(event.diff.protecting_groups) if event.diff is not None else None
+            ),
         )
 
     def close(self) -> None:

@@ -83,6 +83,33 @@ export interface ProcessTrace {
   passed: boolean | null;
 }
 
+export interface StateDiff {
+  protecting_groups: Record<string, string>;
+  termini: Record<string, string>;
+  connectivity_added: Record<string, string>[];
+  fragments: string[];
+  overrides: Record<string, string>;
+  unknowns: string[];
+  route_step: JsonObject | null;
+}
+
+export interface PipelineEvent {
+  kind: string;
+  stage: string;
+  request_id: string | null;
+  node_id: string | null;
+  parent_id: string | null;
+  family: string | null;
+  process: string | null;
+  site: string | null;
+  status: StateStatus | string | null;
+  reason: string | null;
+  kept: boolean | null;
+  frontier: string[];
+  diff: StateDiff | null;
+  message: string | null;
+}
+
 export interface StateLedger {
   protected?: Record<string, string>;
   free_amines?: Record<string, string>;
@@ -247,6 +274,7 @@ export interface PipelineTrace {
   verdict: RouteVerdict;
   cost: CostReport;
   llm_calls: LLMCall[];
+  events: PipelineEvent[];
 }
 
 export const REQUIRED_TRACE_FIELDS = [

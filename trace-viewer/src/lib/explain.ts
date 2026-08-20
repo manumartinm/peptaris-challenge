@@ -1,4 +1,9 @@
-import type { ConflictNodeReport, PipelineTrace } from "../types/trace";
+import type {
+  ConflictNodeReport,
+  PipelineEvent,
+  PipelineTrace,
+  StateLedger,
+} from "../types/trace";
 import { humanize } from "./format";
 
 export interface Explanation {
@@ -45,6 +50,34 @@ export function explainTrace(trace: PipelineTrace): Explanation {
   if (failed.length > 0) {
     bullets.push(
       `Failed nodes: ${failed.map((node) => nodeLabel(node, node.id)).join("; ")}.`,
+    );
+  }
+
+  const selectedProtected = selected?.state.output.protected ?? {};
+  const parent = selected
+    ? byId.get(selected.state.parents[0] ?? "")
+    : undefined;
+  const changed = changedProtectingGroups(parent?.state.output, selected?.state.output);
+  if (Object.keys(changed).length > 0) {
+    bullets.push(
+      `Selected protecting groups: ${Object.entries(changed)
+        .map(([site, group]) => `${site}=${group}`)
+        .join(", ")}.`,
+    );
+  } else if (Object.keys(selectedProtected).length > 0 && selected?.candidate) {
+    const site = selected.candidate.site;
+    const group = selectedProtected[site];
+    if (group) {
+      bullets.push(`Selected protecting group at ${site}: ${group}.`);
+    }
+  }
+
+  const prepared = (trace.events ?? []).filter(
+    (event) => event.kind === "protecting_groups_prepared",
+  );
+  if (prepared.length > 0) {
+    bullets.push(
+      `Protecting groups were recomputed before each compatibility check (${prepared.length} candidate${prepared.length === 1 ? "" : "s"}).`,
     );
   }
 
@@ -98,4 +131,46 @@ export function modifiedSites(trace: PipelineTrace): Set<string> {
     sites.add(entry.requested);
   }
   return sites;
+}
+
+export function changedProtectingGroups(
+  parent: StateLedger | undefined,
+  child: StateLedger | undefined,
+): Record<string, string> {
+  const before = parent?.protected ?? {};
+  const after = child?.protected ?? {};
+  const changed: Record<string, string> = {};
+  for (const [site, group] of Object.entries(after)) {
+    if (before[site] !== group) changed[site] = group;
+  }
+  return changed;
+}
+
+export function candidateProtectionEvents(
+  events: PipelineEvent[],
+  node: ConflictNodeReport,
+): PipelineEvent[] {
+  const candidate = node.candidate;
+  if (!candidate) return [];
+  const parentId = node.state.parents[0] ?? null;
+  return events.filter(
+    (event) =>
+      event.kind === "protecting_groups_prepared" &&
+      event.process === candidate.process &&
+      event.site === candidate.site &&
+      (parentId == null || event.parent_id === parentId),
+  );
+}
+
+export function handleForSite(
+  ledger: StateLedger | undefined,
+  site: string | undefined,
+): string | null {
+  if (!ledger?.protected || !site) return null;
+  if (ledger.protected[site]) return ledger.protected[site];
+  const parts = site.replace(/,/g, " ").replace(/-/g, " ").split(/\s+/).filter(Boolean);
+  const matches = parts
+    .map((part) => ledger.protected?.[part])
+    .filter((item): item is string => Boolean(item));
+  return matches[0] ?? null;
 }
