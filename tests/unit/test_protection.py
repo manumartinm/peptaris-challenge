@@ -3,20 +3,21 @@ from __future__ import annotations
 from route_agent.agent.runtime import build_prior_payload
 from route_agent.conflict.handles import recompute_candidate_protection
 from route_agent.models.agent import AgentCandidate
+from route_agent.models.request import DesignRequest, Residue, ResolvedSite
 from route_agent.parser.sequence import SequenceValidator
 from route_agent.parser.sites import SiteValidator
 from tests.support.validation_case import GLUCAGON, OCTREOTIDE, ValidationCase
 
 
 class TestRecomputeCandidateProtection(ValidationCase):
-    def _residues(self, request):
+    def _residues(self, request: DesignRequest) -> tuple[Residue, ...]:
         return (
             SequenceValidator()
             .validate_parent_sequence(request.sequence, request.residue_annotations)
             .residues
         )
 
-    def _sites(self, request):
+    def _sites(self, request: DesignRequest) -> tuple[ResolvedSite, ...]:
         residues = self._residues(request)
         parsed = SiteValidator().validate_modification_sites(request, residues)
         return parsed.sites_resolved
